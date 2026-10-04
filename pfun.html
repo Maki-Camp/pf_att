@@ -122,6 +122,7 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:.88rem}
       <a href="#parts" data-t="g">공통 파츠</a>
       <a href="#economy" data-t="g">경제와 성장</a>
       <a href="#systems" data-t="p">서버와 시스템</a>
+      <a href="#dormant" data-t="p">잠든 기능</a>
       <a href="#lore" data-t="p">이야기와 이스터에그</a>
       <a href="#archive" data-t="p">코드 고고학</a>
       <a href="#limits">정정과 한계</a>
@@ -254,6 +255,7 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:.88rem}
       <li>설정 → Advanced의 Render Melee Hitboxes를 켜면 근접무기 판정 범위가 빨간 상자로 보여요. Render Bullet Debug는 내 탄 궤적을 그려요.</li>
       <li>Dynamic Stance는 앉거나 엎드릴 때 총이 기울어지는 연출이에요. 총열 축 회전이라 명중률과 무관해요.</li>
       <li>보조 조준(T키) 선택은 총마다 기억돼요.</li>
+      <li>로드아웃의 고급 스탯(Advanced Stats) 화면에는 반동 시뮬레이터가 있어요. 왼쪽 클릭으로 쏘고, 오른쪽 클릭으로 조준, Q로 조준 전환, C로 탄착 표시를 지워요. 반동을 층별로 나눠서 보여 줘요.</li>
     </ul></article>
 </section>
 
@@ -617,6 +619,62 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:.88rem}
     <p>Default(섬멸전), KOTH(점령전), HP(하드포인트), DOM(거점), CTF(깃발), TRUN(도그태그), JUG(저거너트, 팀 점수 막대가 저거너트 체력), EXFIL(데이터 탈취, 들면 위치 공개), REC(데이터 상자 회수, 상자를 쏴서 파괴 가능)예요.</p></article>
 </section>
 
+<section id="dormant" data-t="p">
+  <header><h2>잠든 기능과 미완성 흔적</h2><p>코드에는 있지만 꺼져 있거나 호출되지 않는 것들이에요. 함수 2,278개 중 어디서도 부르지 않는 152개를 추려서 확인했어요.</p></header>
+
+  <article class="e"><h3>리플레이 흔적</h3>
+    <ul>
+      <li>게임 시계(GameClock)에 setReplayOffset이라는 기능이 있어요. 켜면 서버 시간 대신 지정한 녹화 시점부터 시계가 흘러가요. 리플레이 재생용 장치인데, 지금은 어디서도 호출하지 않아요.</li>
+      <li>공용 설정에는 움직임 기록을 5초 동안 보관하는 값(replicationLogTimeWindow = 5)이 있어요. 무엇에 쓰는지는 서버 코드에 있어서 알 수 없어요. <span class="b est">추정</span></li>
+    </ul></article>
+
+  <article class="e"><h3>무기 참(키링) 시스템</h3>
+    <ul>
+      <li>총에 매다는 장식(참)을 실제 물리로 흔드는 CharmPhysics 모듈이 있어요. 질량, 관성, 줄 길이, 공기 저항까지 계산해요.</li>
+      <li>무기 모델 289개에 이미 참을 다는 위치(CharmNode)가 들어가 있어요.</li>
+      <li>시험용 참을 붙이는 코드는 로블록스 스튜디오에서만 작동해요. 킬 카드에는 참을 지우는 코드가 미리 들어가 있어요.</li>
+      <li>출시 준비 중인 꾸미기 기능으로 보여요. <span class="b est">추정</span></li>
+    </ul></article>
+
+  <article class="e"><h3>어린이용 피격 화면</h3>
+    <p>피격 시 화면 가장자리의 빨간 효과를 검은색으로 바꾸는 toggleKidFriendlyDamage 기능이 있어요. 설정에도 없고 호출하는 곳도 없어요. 피 표현 제한 국가 목록(한국 하나)과 함께 쓰려던 것으로 보여요. <span class="b est">추정</span></p></article>
+
+  <article class="e"><h3>프리캠 흐림 효과</h3>
+    <p>프리캠을 켜면 화면 흐림(Blur) 효과가 함께 만들어져요. 탄이 스칠 때 흐려지고, 반복될수록 덜 흐려지는 둔감화 계산까지 들어 있는데, 흐림을 일으키는 함수를 아무도 부르지 않아서 실제로는 흐려지지 않아요.</p></article>
+
+  <article class="e"><h3>저사양 맵 단순화</h3>
+    <p>맵의 모든 부품 재질을 매끈한 플라스틱(SmoothPlastic)으로 바꾸는 simplify 기능이 있어요. 성능을 아끼려는 모드인데 설정에도 없고 호출되지 않아요.</p></article>
+
+  <article class="e"><h3>디버그 창 단축키</h3>
+    <p>Ctrl + L로 디버그 화면, Ctrl + I로 내부 상태 확인 창을 여는 코드가 있어요. 스튜디오에서는 Ctrl 없이도 돼요. 하지만 이 모듈을 불러오는 곳이 없어서 실제 게임에서는 눌러도 반응이 없어요.</p></article>
+
+  <article class="e"><h3>무작위 상품 목록 생성기</h3>
+    <p>프리셋 목록과 스킨 목록을 무작위로 뽑고 할인율까지 붙이는 함수(generateRandomBlueprintList, generateRandomWeaponCamoList)가 있어요. 일일 상점과 같은 할인 추첨표를 쓰는데 클라이언트에서는 호출하지 않아요. 서버가 상점을 만들 때 쓰는 것으로 보여요. <span class="b est">추정</span></p></article>
+
+  <article class="e"><h3>옛 데이터를 새 형식으로 바꾸는 코드</h3>
+    <ul>
+      <li>옛 설정 이름(looksen, aimsen, controllersens, aimaccel, lookaccel)을 지금 이름으로 옮기는 변환표가 있어요. 새 이름 중 하나가 "controllerlookccel"로 오타예요.</li>
+      <li>옛 인벤토리를 케이스·열쇠·스킨 단위의 지금 구조로 바꾸는 변환 함수도 남아 있어요.</li>
+    </ul></article>
+
+  <article class="e"><h3>쓰이지 않는 함수들</h3>
+    <ul>
+      <li>들고 있는 무기를 강제로 다시 장착하는 기능(forceReloadCurrentWeapon)</li>
+      <li>메뉴 카메라의 시야각을 바꾸는 기능(changeFieldOfView)</li>
+      <li>옛 배율 변경 함수(magnify), 지금은 setMagnification이 대신해요</li>
+      <li>근접 공격 명중 처리 함수 하나(meleeHitPlayer)</li>
+      <li>관리자 무기 차단을 토글하는 기능(toggleBlacklisted)</li>
+    </ul></article>
+
+  <article class="e"><h3>개발 환경에서만 달라지는 것</h3>
+    <ul>
+      <li>스튜디오에서는 조준점 색 변경에 필요한 킬이 200이 아니라 0이에요.</li>
+      <li>테스트 서버에서는 채팅창에 경고 문구가 따로 떠요.</li>
+      <li>관리자 권한은 "Developer"와 "Contractor" 두 역할로 나뉘어요.</li>
+      <li>모바일 판정 함수(isMobile)는 테스트 서버와 스튜디오에서만 참을 돌려줘요.</li>
+    </ul></article>
+</section>
+
 <section id="lore" data-t="p">
   <header><h2>이야기와 이스터에그</h2><p>설명문과 데이터에 숨은 세계관과 장난이에요.</p></header>
 
@@ -746,7 +804,10 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:.88rem}
       <li>JKEY에만 있는 rpo = true(Ready Player One)는 현재 어떤 코드도 읽지 않아요.</li>
       <li>한국(KR)이 "Blood" 제한 지역 목록에 유일하게 있지만 현재 코드에서는 쓰이지 않는 흔적이에요.</li>
     </ul></article>
-  
+
+  <article class="e"><h3>해금 랭크가 아주 높은 총</h3>
+    <p>KORD-R 362(XP 약 6,570만), RM 277 277(이름과 같은 숫자), MTS-569 269, ChainSAW 226이에요. 랭크로 열기보다 크레딧으로 사는 게 현실적인 총들이에요.</p></article>
+
   <article class="e"><h3>옛 코드와 새 코드가 섞여 있어요</h3>
     <ul>
       <li>폐기 예정 API FindPartOnRay가 8곳(착지, 수류탄, 탄도 계산기, 레이저)에 남아 있고, 바로 옆에서는 최신 :Raycast(13곳)와 buffer 라이브러리를 써요.</li>
