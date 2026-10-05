@@ -100,13 +100,13 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:.88rem}
 
 <div class="wrap hero">
   <h1><span>팬텀 포스,</span><span>코드로 뜯어보기</span></h1>
-  <p>11.16 게임 모듈(공유·클라이언트·콘텐츠)과 11.17 패치노트를 읽고 찾아낸 숨은 규칙, 공식, 이스터에그를 한곳에 모았어요.</p>
-  <p>클라이언트 모듈 414개, 공유 모듈 253개, 무기 411종, 파츠 719개, 스킨 1,142개, 공식 프리셋 753개를 훑었어요.</p>
+  <p>첨부된 공유·클라이언트·콘텐츠 모듈을 대조해 숨은 규칙, 공식, 이스터에그를 정정·보완했어요. 기준은 첨부 스냅샷이며, 패치 버전은 확정하지 않았어요.</p>
+  <p>총기 292종·근접 107종·수류탄 17종, 파츠 730개, 스킨 1,142개, 프리셋 753개를 집계했어요. 각 항목의 ‘코드 근거’를 펼치면 확인한 모듈과 계산 범위를 볼 수 있어요.</p>
   <div class="legend" aria-label="색 구분">
     <span><i class="lg"></i>바로 써먹는 것</span>
     <span><i class="lp"></i>숨은 구조와 이야기</span>
   </div>
-  <p class="note" style="margin-top:10px">두 색은 게임 속 고스트(주황)와 팬텀(파랑) 팔 색을 그대로 가져왔어요.</p>
+  <p class="note" style="margin-top:10px">기존 주황·파랑 색 구분과 화면 스타일을 유지했어요. ‘계산’은 명시한 조건의 산출값, ‘범위 제한’은 정적 분석의 한계를 뜻해요.</p>
 </div>
 
 <div class="bar">
@@ -136,731 +136,229 @@ footer{padding:48px 0 64px;color:var(--muted);font-size:.88rem}
 <section id="tips" data-t="g">
   <header><h2>실전 팁</h2><p>게임 안에서 바로 체감할 수 있는 것만 모았어요.</p></header>
 
-  <article class="e"><h3>첫 발은 반동 영향을 받지 않아요</h3>
-    <p>반동은 탄이 나간 다음에 적용돼요. 지향사격 퍼짐도 첫 발에는 0이에요. 그래서 끊어 쏘면 매번 첫 발 정확도를 쓸 수 있어요.</p></article>
+  <article class="e"><h3>첫 발도 항상 정확한 건 아니에요<span class="b fix">정정</span></h3><p>이번 발로 생긴 반동은 이후 총 자세에 반영되지만, <b>이전 발의 반동·지향사격 퍼짐이 버튼을 놓는 순간 초기화되지는 않아요.</b> 충분히 회복하기 전에 다시 누르면 그대로 이어져요.</p><p>산탄이나 고유 spread·aimchoke가 있는 무기는 첫 발부터 퍼질 수 있어요. 끊어 쏘기는 회복 시간을 벌어 주는 방법이지, 매번 무조건 무반동·무퍼짐으로 만드는 기능은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>FirearmObject: impulseSprings·fireRound·step / MainCameraObject: step</p></details></article>
 
-  <article class="e"><h3>반동은 앉기가 가장 적어요</h3>
-    <p>앉기 −15%, 엎드리기 −10%예요. 총 반동과 카메라 반동, 지향사격 퍼짐에 모두 적용돼요. 엎드릴 필요 없이 앉기만 해도 더 좋아요.</p></article>
+  <article class="e"><h3>반동 충격 보정은 앉기 −15%, 엎드리기 −10%</h3><p>서기 0, 앉기 0.15, 엎드리기 0.1의 stability를 써요. 총 회전·총 이동·카메라 반동 충격에 각각 1 − stability가 곱해져서, 이 보정만 비교하면 앉기가 더 강해요.</p><p>지향사격 퍼짐을 밀어 주는 값에도 자세 보정이 들어가지만, 무기별 스코프 흔들림·거치 조건까지 모두 같아지는 건 아니에요. 크로스헤어 표시 크기는 별도로 앉기 ×0.75, 엎드리기 ×0.5가 적용돼요.</p><details class="note"><summary>코드 근거</summary><p>CharacterObject: setMovementMode / FirearmObject: impulseSprings / HudCrosshairsInterface: getCrossSize·step</p></details></article>
 
-  <article class="e"><h3>뛰거나 점프해도 탄이 더 퍼지지 않아요</h3>
-    <p>크로스헤어와 지향사격 퍼짐은 쏠 때만 벌어져요. 이동이나 점프는 계산에 들어가지 않아요. 다만 이동 중 총 흔들림(회전)은 조준점을 움직여요.</p></article>
+  <article class="e"><h3>움직이면 크로스헤어는 커져도, 같은 만큼 탄이 퍼지지는 않아요<span class="b fix">정정</span></h3><p>표시용 크로스헤어 크기에는 이동 속도와 달리기 상태가 들어가요. 원문의 “쏠 때만 벌어진다”는 설명은 틀렸어요.</p><p>반면 지향사격 퍼짐 스프링을 밀어 주는 계산은 이 표시용 최종 크기가 아닌 getCrossSize() 값을 써요. 이동·점프 상태를 직접 넣어 퍼짐을 늘리는 항은 없지만, 걷기·관성 흔들림으로 총 방향은 바뀔 수 있어요.</p><details class="note"><summary>코드 근거</summary><p>HudCrosshairsInterface: getCrossSize·step / FirearmObject: impulseSprings·step</p></details></article>
 
-  <article class="e"><h3>탄은 화면 중앙이 아니라 총이 향한 곳으로 가요</h3>
-    <ul>
-      <li>총이 돌아가는 흔들림(총 반동, 걷기 회전, 관성 회전, 카메라 반동, 스코프 흔들림)은 탄착에 영향을 줘요.</li>
-      <li>총이 평행 이동하는 흔들림(총 위치 밀림, 정지 출렁임, 걷기 출렁임)은 사실상 영향이 없어요.</li>
-      <li>화면만 흔들리는 효과(화면 흔들림, 제압, 피격)는 탄 방향에 안 들어가요.</li>
-      <li>지향사격 크로스헤어는 화면 중앙에 고정이라, 화면이 흔들리면 실제 탄착과 어긋나요. 조준 중에는 조준점을 믿으면 돼요.</li>
-    </ul></article>
+  <article class="e"><h3>탄 방향과 화면 흔들림은 구분해서 봐야 해요<span class="b fix">정정</span></h3><ul><li>총 회전 반동, 걷기 회전, 관성 회전, 카메라 body 반동, 스코프 흔들림은 발사 기준 자세에 들어가요.</li><li>카메라 head 반동·제압·피격 효과는 최종 화면에 더해져요. 탄 방향에 같은 방식으로 더해지는 항이 아니에요.</li><li>총의 평행 이동은 방향 벡터를 직접 돌리지는 않지만 발사 위치를 바꿔요. 따라서 근거리 장애물 판정까지 “영향 없음”이라고 할 수는 없어요.</li><li>중앙 크로스헤어가 실제 총 방향을 항상 가리키지는 않아요. 조준해도 고유 퍼짐과 탄 낙차는 남아요.</li></ul><details class="note"><summary>코드 근거</summary><p>FirearmObject: impulseSprings·fireRound·step / MainCameraObject: step</p></details></article>
 
-  <article class="e"><h3>조준하면 탄은 총구가 아니라 조준경에서 나가요</h3>
-    <ul>
-      <li>조준 중에는 탄의 출발점과 방향이 모두 <b>조준경</b> 기준이에요. 지향사격 중에만 총구 기준이에요.</li>
-      <li>그래서 조준선과 탄도가 처음부터 일치해요. 실총처럼 조준경이 총열보다 높아서 생기는 높이 차이를 보정할 필요가 없어요.</li>
-      <li>예광탄은 총구에서 그려지지만 실제 탄은 조준경 쪽에서 출발해요. 눈에 보이는 궤적과 실제 판정이 출발 지점에서 조금 달라요.</li>
-      <li>출발점은 카메라에서 조준경(또는 총구)까지 선을 그어 정해요. 그 사이에 벽이 있으면 벽 바로 앞에서 출발해서, 총구를 벽 너머로 들이밀어도 벽 뒤로 쏠 수는 없어요.</li>
-      <li>탄에는 내 이동 속도가 더해지지 않아요. 달리면서 쏴도 탄속은 그대로예요. 수류탄과 다른 점이에요.</li>
-    </ul></article>
+  <article class="e"><h3>조준 사격은 현재 조준 기준점에서 출발해요</h3><ul><li>조준 중에는 활성 조준점의 위치·방향, 지향사격 중에는 barrel 기준 위치·방향을 써요. 일반적인 조준경뿐 아니라 아이언 사이트와 보조 조준도 포함돼요. 보조 조준이 총구를 sight로 지정하는 경우도 있어요.</li><li>카메라 기준점에서 발사 기준점까지 가림을 검사하고, 장애물을 만나면 충돌 위치에 법선 방향 0.01스터드를 더한 곳에서 출발해요.</li><li>예광탄은 visualorigin으로 총구 위치를 받아요. 실제 판정용 출발점과 보이는 궤적의 출발점이 다를 수 있어요.</li><li>탄 초기 속도는 bulletspeed × 발사 방향이에요. 캐릭터의 이동 속도를 더하는 항은 없어요.</li></ul><details class="note"><summary>코드 근거</summary><p>FirearmObject: fireRound / FirearmStats: new / BulletObject: new</p></details></article>
 
-  <article class="e"><h3>장전 중에 사격 버튼을 누르면 0.1초 만에 취소돼요</h3>
-    <p>탄창에 탄이 남아 있을 때만 돼요. 탄창식 총은 장전 애니메이션이 끝나야 탄이 한꺼번에 들어가서, 끝나기 직전에 취소하면 하나도 안 채워져요. 한 발씩 넣는 총은 넣은 만큼 남아요.</p>
-    <p>남은 탄은 버려지지 않고, 약실이 있는 총은 한 발 남기고 장전하면 탄창 + 1발이 돼요. 사격 모드 전환에는 0.4초 쿨다운이 있어요.</p></article>
+  <article class="e"><h3>장전 취소와 약실 계산<span class="b fix">정정</span></h3><p>탄이 남아 있고 장전 상태가 허용하면 사격 입력으로 장전 취소를 요청해요. 취소 전환에 쓰는 기본 _reloadCancelTime은 0.1초지만, 입력 한 번으로 즉시 발사가 보장되는 건 아니에요. 현재 장전 단계와 챔버 상태도 확인해요.</p><p>탄창·클립·리볼버·한 발씩 넣기·단계식 장전이 각각 별도 처리돼요. 남은 탄을 보존하고, 약실을 지원하는 총은 조건에 따라 탄창 용량보다 한 발 더 들 수 있어요. 사격 모드 변경에는 0.4초 간격 제한이 있어요.</p><details class="note"><summary>코드 근거</summary><p>FirearmObject: shoot·reloadCancel·setFiremode / ReloadMag·ReloadClip·ReloadRevolver·ReloadSingle·ReloadStaged / ChamberStateMachine</p></details></article>
 
-  <article class="e"><h3>숨 참기는 흔들림을 그 자리에서 멈출 뿐이에요</h3>
-    <p>가운데로 돌려놓지 않으니 조준점이 가운데 왔을 때 눌러야 해요. 대부분의 스코프는 숨 게이지가 약 3.3초면 다 차고 회복도 비슷해요. 스코프를 안 볼 때도 회복돼요.</p></article>
+  <article class="e"><h3>숨 참기 시간과 정지 여부는 스코프마다 달라요<span class="b fix">정정</span></h3><p>숨 참기는 흔들림의 진행 속도를 낮추는 방식이에요. 가운데로 조준점을 돌려놓는 기능은 아니고, 서 있을 때 standsteadyspeed가 지정된 조준경은 숨을 참아도 움직임이 남을 수 있어요.</p><p>게이지가 0에서 1까지 차는 시간은 <b>1 ÷ (60 × breathspeed)</b>예요. 0.005면 약 3.33초, 0.001이면 약 16.67초예요. 회복은 recoverspeed로 따로 계산하고, 스코프 밖에서도 회복돼요.</p><details class="note"><summary>코드 근거</summary><p>FirearmObject: step / FirearmStats: new / MainCameraObject: setSwaySpeed</p></details></article>
 
-  <article class="e"><h3>마우스 감도는 배율로 나눠요</h3>
-    <p>4배 스코프면 1/4이에요. 그런데 기본 설정에서는 위아래를 가파르게 볼수록 좌우 감도 감소가 약해져요. 설정의 Direct Angular Input을 켜면 항상 1/배율로 일정해요. 스코프 배율은 내 FOV 설정 기준으로 적용돼요.</p></article>
+  <article class="e"><h3>배율 감도는 수직·수평을 따로 계산해요<span class="b fix">정정</span></h3><p>m = max(1, 현재 배율), θ = 위아래 시선 각도라고 하면 기본 수직 감도는 1/m, 수평 감도는 <b>1 ÷ √((m cos θ)² + sin² θ)</b>예요. 수평으로 볼 때는 둘 다 1/m이고, 위아래로 가파르게 볼수록 수평 감도 감소가 약해져요.</p><p>Direct Angular Input을 켜고 HUD의 스코프 모드가 활성화되면 두 축 모두 1/m을 써요. 설정을 켰다고 모든 조준 방식에서 무조건 같은 분기로 가는 것은 아니에요. 스코프 FOV는 사용자의 기본 FOV를 기준으로 계산해요.</p><details class="note"><summary>코드 근거</summary><p>MainCameraObject: onMouseMove·step / HudScopeInterface: setScope</p></details></article>
 
-  <article class="e"><h3>스팟과 이름표 읽는 법</h3>
-    <ul>
-      <li>스팟(E키)은 화면 중앙 15° 안에서 시야가 트인 적을 한 번에 전부 표시해요. 클라이언트 코드에는 거리 제한이 없어요.</li>
-      <li>빨간 "Spotted by enemy!"는 지금 적이 나를 보는 중, 초록 "Hiding from enemy..."는 스팟됐지만 보는 적이 없음, 노란 "On Radar!"는 사격으로 레이더에 떴다는 경고예요.</li>
-      <li>"On Radar!"는 한 발에 3초, 계속 쏘면 최대 20초 떠 있지만 실제 레이더 점은 기본 0.5초만 떠요.</li>
-      <li>이름표는 조준선과 상대 사이 수직 거리(스터드)로 떠요. 스팟 안 된 적은 시야가 트이고 2스터드 이내일 때 이름이 떠서, 애매한 형체에 조준점을 올리면 적인지 확인할 수 있어요.</li>
-      <li>아군은 조준선 4스터드 이내면 체력 바까지 보여요.</li>
-    </ul></article>
+  <article class="e"><h3>스팟·이름표·레이더 경고는 서로 달라요<span class="b fix">정정</span></h3><ul><li>스팟 입력은 시선에서 반각 15° 안에 있고 가림 검사를 통과한 적들을 한 번에 요청해요. 이 클라이언트 후보 선택에는 별도 거리 상한이 없어요. 서버의 승인·유지 규칙은 별도예요.</li><li>빨강은 스팟된 상태에서 시야가 이어진 것으로 처리되는 경우, 초록은 스팟은 남았지만 시야가 끊긴 경우예요. 갱신 지연이 있어 “바로 지금 보고 있다”와 완전히 같지는 않아요.</li><li>노란 On Radar!는 실제 적 레이더 점의 수명 표시가 아니에요. 코드상 goingLoud()는 보통 카운터를 30으로 되돌리고, step은 약 0.2초 이상마다 1씩 줄여 약 6초간 경고해요. 정상 초기 상태에서 “매 발 누적해 최대 20초”라는 동작은 나오지 않아요.</li><li>실제 사격 레이더 점은 무기의 pinglife 또는 기본 0.5초를 써요. 파츠·숨김 거리·관찰자 위치에 따라 표시 여부도 달라져요.</li><li>이름표 기준값은 거리 × tan(조준선과 대상의 각도)이에요. 스팟 안 된 적은 시야가 트이고 이 값이 2 미만일 때 선명해지며, 2~4에서는 흐려져요. 아군 체력 바도 4 미만에서 선명하고 4~8에서는 흐려져요.</li></ul><details class="note"><summary>코드 근거</summary><p>HudSpottingInterface: spot·goingLoud·step / HudRadarInterface: fireShot / HudNameTagObject: step</p></details></article>
 
-  <article class="e"><h3>소리와 피격으로 위치 읽기</h3>
-    <ul>
-      <li>맞으면 화면이 탄이 날아온 방향 기준으로 기울어요. 화면에만 적용돼서 조준점은 그대로예요.</li>
-      <li>발소리는 128스터드 안에서만 들리고, 왼발만 소리가 나서 두 걸음에 한 번 들려요.</li>
-      <li>적 발소리는 아군보다 약 2.7배 크게 재생돼요. 속도가 15를 넘으면 달리기 소리로 바뀌어요.</li>
-      <li>적 레이저는 시선 방향으로 최대 50스터드 빔으로 보여요. 스코프 반사광 코드는 없어요.</li>
-    </ul></article>
+  <article class="e"><h3>소리와 피격으로 위치 읽기<span class="b fix">정정</span></h3><ul><li>피격 방향은 화면 기울기 효과에 들어가요. 총의 판정용 방향과 화면 효과를 구분해야 해요.</li><li>다른 플레이어의 발소리 생성은 128스터드 미만에서, 소리 플래그가 붙은 한쪽 발의 착지 때 일어나요. 발 상태가 번갈아 교환되어 두 걸음마다 한 번 재생하는 구조예요.</li><li>같은 거리에서 일반 적 발소리의 볼륨 인자는 아군의 √(15/2), 약 2.74배예요. 적의 나무 바닥 소리는 √5, 약 2.24배인 예외가 있어요. 실제 체감 음량 배수와는 달라요. 속도 15 초과면 run 음원을 선택해요.</li><li>다른 플레이어의 레이저 빔은 최대 50스터드 방향 벡터로 검사해요. 첨부 코드에서 별도의 스코프 반사광 구현은 확인하지 못했어요.</li></ul><details class="note"><summary>코드 근거</summary><p>MainCameraObject: hit·step / ThirdPersonObject: step·레이저 빔 처리</p></details></article>
 
-  <article class="e"><h3>체력 회복과 낙하</h3>
-    <p>회복량은 (회복 시작 후 시간)²이에요. 1초 +1, 3초 +9, 5초 +25, 10초면 가득 차요. 처음엔 느리다가 끝에 몰려요. 회복이 시작되기까지의 대기 시간은 서버가 정해요.</p>
-    <p>낙하는 착지 속도를 떨어진 높이로 바꿔서 판정해요. 2스터드 초과면 착지음, 12스터드 초과면 강한 착지음, 16스터드 초과면 낙하 피해 요청이 가요.</p></article>
+  <article class="e"><h3>체력 회복과 낙하</h3><p>표시 체력은 회복 기준 시점 이후 <b>min(최대 체력, 기준 체력 + 경과 시간² × healRate)</b>로 계산해요. 기본 healRate = 1이면 1초 +1, 3초 +9, 5초 +25예요. 남은 체력과 최대 체력에 따라 완충 시간은 달라져요. 서버가 기준 시점·회복률·최대 체력을 갱신할 수 있어요.</p><p>착지에서는 수직 속도² ÷ (2 × workspace.Gravity)를 높이처럼 사용해요. 이 값이 2 초과면 착지음, 12 초과면 강한 착지음, 16 초과면 추가 착지음과 낙하 피해 요청이 나가요. 최종 피해량은 이 코드에 없어요.</p><details class="note"><summary>코드 근거</summary><p>CharacterObject: getHealth·updateHealth·onHumanoidStateChanged / ReplicationInterface: updatehealth</p></details></article>
 
-  <article class="e"><h3>슬라이드와 벽 넘기</h3>
-    <ul>
-      <li>슬라이드 중 왼쪽 Shift(Slide Control)를 누르고 있으면 마우스 방향으로 슬라이드가 휘어요.</li>
-      <li>슬라이드 중 점프하면 높이가 3.3에서 4.3으로 약 30% 올라가요. 대신 속도가 약 15 줄어요.</li>
-      <li>옆으로 하는 슬라이드는 20% 느려요.</li>
-      <li>벽 넘기는 발 기준 1.8~4스터드 높이, 걷기 6스터드·달리기 8스터드 앞에서 감지돼요. 넘은 뒤 속도는 원래 × 1.05예요.</li>
-      <li>총으로 조준 중이면 벽 넘기가 안 되고 그냥 점프해요. "Jump No Vault" 바인딩(기본 비어 있음)에 키를 잡으면 넘지 않고 점프할 수 있어요.</li>
-      <li>점프는 착지 후 0.5초 또는 마지막 점프 후 0.8초가 지나야 다시 돼요.</li>
-      <li>벽 넘기는 연속으로 0.3초 쿨다운이 있어요. 앉거나 엎드린 상태에서 점프 키를 누르면 점프 대신 일어서요.</li>
-      <li>다이브는 아래로 빠르게 떨어지는 중에는 안 나가고 엎드리기만 돼요.</li>
-      <li>배율 스코프로 조준 중에는 달리기가 안 돼요.</li>
-    </ul></article>
+  <article class="e"><h3>슬라이드와 벽 넘기<span class="b fix">정정</span></h3><ul><li>Slide Control을 누르는 동안 슬라이드 방향을 시점 방향에 맞춰 갱신해요. 기본 바인딩은 왼쪽 Shift예요.</li><li>슬라이드 관련 점프에는 높이 4.3 설정이 있어요. 일반 점프 3.3보다 약 30% 높지만 감속은 진입·일어서기·점프 순서와 스태미나 설정에 따라 달라서 “항상 속도 −15”로 묶으면 안 돼요.</li><li>슬라이드 시작 속도에는 무기 이동 속도와 방향이 반영돼요. 옆 방향 계수의 하한은 0.8이에요.</li><li>벽 넘기는 발 기준 중간 높이 1.8~4스터드의 장애물과 상단 5~6스터드의 여유 공간을 함께 검사해요. 중간 검사의 전방 거리는 걷기 6, 달리기 8스터드예요.</li><li>넘을 때 수평 속도는 현재 수평 속도와 걷기 스프링 값 중 큰 것을 사용하고, 그 방향과 위쪽 7.5를 합한 벡터에 1.05를 곱해요. “종료 후 원래 속도 ×1.05”로 고정되는 것은 아니에요.</li><li>총 조준 중에는 점프 입력의 자동 벽 넘기가 제한돼요. Jump No Vault 바인딩으로 자동 넘기를 피할 수 있어요. 앉거나 엎드린 상태에서는 먼저 일어나요.</li><li>점프 가능 조건은 마지막 착지 후 0.5초 초과 또는 마지막 점프 후 0.8초 초과예요. 벽 넘기에는 0.3초 간격 검사가 있어요.</li><li>다이브는 달리는 상태이며 수직 속도가 −5보다 클 때 적용돼요. blackscope 조준은 달리기를 제한해요.</li></ul><details class="note"><summary>코드 근거</summary><p>CharacterObject: jump·setMovementMode·parkour·getParkourDetection·canJump / CharacterConfig</p></details></article>
 
-  <article class="e"><h3>수류탄을 가장 멀리 던지는 법</h3>
-    <p>던지는 속도에 내 몸 속도가 더해져요. 속도는 버튼을 떼는 순간 측정돼요. 다이브는 무기와 상관없이 0.1초 시점에 앞 55, 위 32로 가장 빨라서, 이때 던지면 가장 멀리 가요.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>상황</th><th class="n">FRAG</th><th class="n">V40</th><th class="n">번들 차지</th></tr></thead>
-      <tbody>
-        <tr><td>서서</td><td class="n">1.00×</td><td class="n">1.00×</td><td class="n">1.00×</td></tr>
-        <tr><td>달리기</td><td class="n">1.30×</td><td class="n">1.20×</td><td class="n">1.54×</td></tr>
-        <tr><td>달리며 점프 직후</td><td class="n">1.93×</td><td class="n">1.60×</td><td class="n">2.77×</td></tr>
-        <tr><td>다이브 시작</td><td class="n">2.40×</td><td class="n">1.88×</td><td class="n">3.80×</td></tr>
-        <tr><td>다이브 두 번째 가속 직후</td><td class="n">2.56×</td><td class="n">1.98×</td><td class="n">4.18×</td></tr>
-      </tbody></table></div>
-    <p>0.05초 늦을 때마다 약 0.2배씩 줄어요. 시야는 다이브 방향으로 위 45~50°가 좋아요. 비행 시간이 길어지니 쿠킹은 짧게 하세요. DYNAMITE는 시야보다 5° 아래, PB와 DYNAMITE-3는 5° 위로 나가요.</p>
-    <p class="note">수류탄 궤적은 서버가 계산해요. 중력값 두 가지(−80, −196.2)로 다 계산했는데 배수는 거의 같았어요.</p></article>
+  <article class="e"><h3>수류탄은 투척 순간의 몸 속도를 이어받아요<span class="b fix">정정</span></h3><p><b>초기 속도 = 투척 방향 × throwspeed + 캐릭터 속도</b>예요. 값을 잡는 시점은 armed → throwing 전환에서 throwInstance()를 호출할 때예요. 정상적으로 쿠킹을 마친 뒤 버튼을 놓으면 이때 바로 투척되며, 화면의 던지기 애니메이션이 끝날 때까지 기다리지 않아요.</p><p>다이브에는 시작 때 전방 45·위 35, 약 0.1초 후 전방 55·위 32, 약 0.4초 후 전방 25·아래 10으로 속도를 다시 주는 코드가 있어요. 이 속도를 활용할 수는 있지만, <b>고정 사거리 배수·최적 각도·매 0.05초 손실량</b>은 지형, 신관, 충돌, 중력을 포함한 실험 없이는 보장할 수 없어요.</p><p>원문의 1.30~4.18배 표와 45~50° 최적각 단정은 제거했어요. DYNAMITE의 throwangle은 −5°, PB GRENADE와 DYNAMITE-3는 +5°예요.</p><details class="note"><summary>코드 근거</summary><p>GrenadeObject: throw·throwInstance·step / ArmStateMachine: throwStart / CharacterObject: 다이브 처리</p></details></article>
 
-  <article class="e"><h3>수류탄 그 밖의 규칙</h3>
-    <ul>
-      <li>쿠킹한 채 죽거나 신관 시간을 넘기면 던지는 속도 없이 발밑에 떨어져요.</li>
-      <li>T-13은 쿠킹이 안 돼요.</li>
-      <li>신관 시간은 세열 5초, 셈텍스 4초, V40 4초, 번들 차지 4.5초, PB 6.7초예요.</li>
-      <li>수류탄 히트마커는 폭발 지점과 시야가 트인 적에게만 떠요.</li>
-    </ul></article>
+  <article class="e"><h3>수류탄 신관과 쿠킹 예외<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>수류탄</th><th>투척 속도</th><th>fusetime(초)</th><th>쿠킹</th></tr></thead><tbody><tr><td>M67 FRAG</td><td>100</td><td>5</td><td>가능</td></tr><tr><td>V40 MINI</td><td>150</td><td>4</td><td>가능</td></tr><tr><td>SEMTEX</td><td>112</td><td>4</td><td>불가</td></tr><tr><td>BUNDLE CHARGE</td><td>55</td><td>4.5</td><td>가능</td></tr><tr><td>PB GRENADE</td><td>80</td><td>6.7</td><td>가능</td></tr><tr><td>TYPE 77-1 FRAG</td><td>124</td><td>2.8</td><td>불가</td></tr><tr><td>M24 STICK</td><td>122</td><td>4.5</td><td>불가</td></tr><tr><td>T-13 IMPACT</td><td>145</td><td>15</td><td>불가</td></tr><tr><td>DYNAMITE</td><td>100</td><td>5</td><td>가능</td></tr><tr><td>DYNAMITE-3</td><td>80</td><td>5.5</td><td>가능</td></tr></tbody></table></div><ul><li>사망·신관 초과로 강제 투하할 때는 앞으로 던지는 속도 항만 빠져요. 캐릭터 속도는 남으므로 “속도 없이 발밑에 정지 낙하”는 아니에요. nodeaddrop 예외 플래그를 확인하는 분기도 있어요.</li><li>T-13뿐 아니라 SEMTEX, TYPE 77-1, M24 STICK에도 uncookable = true가 있어요. 충격식 수류탄의 실제 폭발 시점은 fusetime 값만으로 단정할 수 없어요.</li><li>폭발 히트마커 계산에는 폭발 위치에서 적까지의 가림 검사가 있어요. 히트마커 표시와 서버의 최종 피해 처리는 구분해야 해요.</li></ul><details class="note"><summary>코드 근거</summary><p>GrenadeObject: throwInstance·step·사망 처리 / ThrowableConnector / 각 수류탄 WeaponDatabase</p></details></article>
 
-  <article class="e"><h3>저격총과 거치 파츠</h3>
-    <ul>
-      <li>Straight Pull Bolt(저격총 17종)를 달면 장전 손잡이를 당겨도 스코프가 안 풀려요. FT300 확장 탄창에도 같은 효과가 있어요.</li>
-      <li>양각대(M249, M82A1)는 카메라 수직 반동 −50% 대신 서서 조준이 안 되고 조준 중 이동 속도가 0이 돼요.</li>
-      <li>NTW Obrez Barrel은 서서 조준을 허용하는 대신 카메라 수직 반동이 ×5예요.</li>
-      <li>사다리를 타는 중에는 조준이 강제로 풀려요.</li>
-    </ul></article>
+  <article class="e"><h3>Marksman Kit와 거치 파츠<span class="b fix">정정</span></h3><ul><li>내부명 Straight Pull Bolt의 표시 이름은 <b>Marksman Kit</b>예요. 기본 장착 목록상 19종에 있고, pullout = false·straightpull = true로 조준을 유지한 채 노리쇠를 조작해 다음 탄을 약실에 넣을 수 있게 해요. 흔들림·숨 참기·이동·조작 수치도 함께 바뀌어요.</li><li>FT300 Extended Magazine도 표시 이름이 Marksman Kit이며, 10발 탄창·약실 1·straightpull을 설정하는 별도 파츠예요.</li><li>M249·M107 양각대는 supertest = 2인 시험용 데이터예요. 장착 가능 데이터가 있다고 일반 서버에서 누구나 쓸 수 있다는 뜻은 아니에요.</li><li>restrictedads는 앉기·엎드리기 또는 서서 유효한 장애물이 감지되는 조건으로 조준을 제한해요. 두 양각대 모두 조준 이동 배율은 0이지만 반동 변경 목록은 서로 달라요.</li><li>NTW Obrez Barrel은 restrictedads를 해제하고 조준 카메라 body의 첫 층 수직 쏠림·랜덤을 ×5로 바꿔요. 그 밖의 반동·탄속·관통·이동 수치도 바뀌어요. 사다리를 타면 조준은 풀려요.</li></ul><details class="note"><summary>코드 근거</summary><p>Straight Pull Bolt·FT300 Extended Magazine·M249/M107 Unfolded Bipod·NTW Obrez Barrel의 AttachmentData / FirearmObject: setAim·step / 기본 장착 목록 합성</p></details></article>
 
-  <article class="e"><h3>탄약 줍기와 레이저</h3>
-    <ul>
-      <li>떨어진 총에서 1초마다 자동으로 탄을 줍는데, 기준은 구경이 아니라 내부 계열이에요. 돌격소총·카빈·LMG 대부분이 같은 계열이라 다른 구경 총에서도 주워요. 반대로 .22 LMG(HORNET, MGV-176)는 권총 계열, RSH-12 리볼버는 DMR 계열이에요.</li>
-      <li>레이저는 언더배럴과 기타 칸에 하나씩, 같은 것도 두 번 달 수 있어요. 효과는 합산 배율로 한 번 더 들어가요. 개발자 공식 프리셋 AXIS TRI-RAMA가 트라이 레이저 두 개예요.</li>
-    </ul></article>
+  <article class="e"><h3>탄약 공유와 레이저 중첩<span class="b fix">정정</span></h3><ul><li>떨어진 총과 내 총의 <b>내부 type이 같거나 ammotype이 같으면</b> 탄약 요청 대상이 돼요. 근처 상호작용 대상이어야 하고 예비탄이 부족할 때 최대 1초 간격으로 요청해요. “구경은 전혀 관계없다”는 설명은 틀렸어요.</li><li>로드아웃 분류와 내부 type은 달라요. HORNET·MGV-176은 내부 PISTOL, RSH-12는 내부 DMR예요.</li><li>허용된 칸이라면 같은 레이저를 Underbarrel·Other에 함께 장착해요. 두 파츠의 modifier가 모두 들어가며, relativeMultiplier는 누적 합으로, trueMultiplier는 곱으로 합쳐요.</li><li>AXIS TRI-RAMA 프리셋에는 Tri Laser가 두 개예요. Tri Laser 두 개의 기본 crosssize 계수는 1/(1+0.25+0.25) = 약 0.667, crossexpansion은 1/(1+0.5+0.5) = 0.5예요. 무기별 추가 보정은 별도예요.</li></ul><details class="note"><summary>코드 근거</summary><p>WeaponControllerObject: stepPickup / ContentUtils: compileWeaponData / Tri Laser / AXIS TRI-RAMA</p></details></article>
 
-  <article class="e"><h3>분대 스폰과 관전</h3>
-    <ul>
-      <li>분대원이 5초 안에 교전했거나 체력 25 이하거나, 깃발전에서 적 깃발 100스터드 안이면 "IN COMBAT"으로 스폰이 막혀요.</li>
-      <li>나에게 스폰하는 걸 특정 사람만 또는 전원 막을 수 있어요.</li>
-      <li>메인 메뉴 분대 목록에서 아군을 고르면 그 시점을 따라가는 관전 카메라가 돼요.</li>
-      <li>일반 서버의 강제 리스폰에는 5초 카운트다운이 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>분대 스폰·관전·강제 리스폰<span class="b fix">정정</span></h3><ul><li>분대원이 최근 교전 후 5초 미만이거나 체력이 25 이하이면 IN COMBAT이에요. CTF에서 적 깃발 근처인지 확인하는 조건도 있어요.</li><li>나에게 스폰하는 사람을 개별·전체로 제한할 수 있고, 분대 목록에서 아군을 고르면 관전 카메라가 따라가요.</li><li>Force Respawn 입력은 먼저 서버에 forcereset을 보내요. 일반 플레이 조건에서는 5부터 0까지 세는 안내 UI를 별도로 띄워요. 이 UI를 서버의 실제 리스폰 대기 시간과 동일시하면 안 돼요.</li><li>공유 respawnDebounces에는 일반 Normal 1초·Forced 2초, 분대 Normal/Forced 각 4초가 있어요. 이 설정을 서버가 어떻게 적용하는지는 서버 실행 코드가 필요해요.</li></ul><details class="note"><summary>코드 근거</summary><p>PlayerStatusInterface: getDeployStatus / GameModeClientCTF / PageMainMenuButtonSquadList / CharacterObject: Force Respawn / PublicSettings</p></details></article>
 
-  <article class="e"><h3>설정 속 숨은 도구</h3>
-    <ul>
-      <li>설정 → Advanced의 Render Melee Hitboxes를 켜면 근접무기 판정 범위가 빨간 상자로 보여요. Render Bullet Debug는 내 탄 궤적을 그려요.</li>
-      <li>Dynamic Stance는 앉거나 엎드릴 때 총이 기울어지는 연출이에요. 총열 축 회전이라 명중률과 무관해요.</li>
-      <li>보조 조준(T키) 선택은 총마다 기억돼요.</li>
-      <li>로드아웃의 고급 스탯(Advanced Stats) 화면에는 반동 시뮬레이터가 있어요. 왼쪽 클릭으로 쏘고, 오른쪽 클릭으로 조준, Q로 조준 전환, C로 탄착 표시를 지워요. 반동을 층별로 나눠서 보여 줘요.</li>
-    </ul></article>
+  <article class="e"><h3>설정 속 숨은 도구</h3><ul><li>Advanced의 Render Melee Hitboxes는 근접 판정을 시각화하고, Render Bullet Debug는 탄의 이동·충돌 디버그 표시를 켜요.</li><li>Dynamic Stance는 자세에 따라 총을 기울이는 표현이에요. 독립적인 명중률 보너스를 설정하는 기능은 아니에요.</li><li>보조 조준 선택을 무기별로 보관하는 코드가 있어요.</li><li>Advanced Stats 반동 시뮬레이터는 왼쪽 클릭 사격, 오른쪽 클릭 조준, Q 조준 토글, C 탄착 표시 초기화를 지원해요. 반동의 여러 층을 분리해서 볼 수 있어요.</li></ul><details class="note"><summary>코드 근거</summary><p>SettingsToggleMeleeHitboxes / BulletObject / FirearmObject / PageLoadoutMenuDisplayWeaponAdvancedStats</p></details></article>
 </section>
 
 <section id="formula" data-t="g">
   <header><h2>숨은 공식</h2><p>게임이 실제로 계산하는 방식이에요.</p></header>
 
-  <article class="e"><h3>반동의 구조</h3>
-    <ul>
-      <li>반동은 카메라 반동, 총 반동, 총 위치 밀림, 화면 흔들림 네 종류의 스프링이에요.</li>
-      <li>각 항목의 1번은 감쇠, 2번은 복원 속도, 3번은 쏠림, 4번은 랜덤이에요. 매 발 충격은 "쏠림 ± 랜덤" 범위에서 무작위로 정해져요.</li>
-      <li>마지막 사격 후 대기 시간(대부분 0.1초)이 지나면 감쇠·복원 속도가 회복용 값으로 바뀌어요. 그래서 600RPM 넘게 연사하는 중에는 회복값이 작동하지 않아요.</li>
-      <li>반동 충격에는 (1 − 사격 모드 보정) × (1 − 자세 보정)이 곱해져요.</li>
-      <li>컨트롤러는 카메라 반동이 ×0.5, 터치는 ×0.75예요.</li>
-    </ul></article>
+  <article class="e"><h3>반동 스프링과 회복의 구조<span class="b fix">정정</span></h3><ul><li>무기 이동 Translation, 무기 회전 Rotation, 카메라 body, 카메라 head 반동을 각각 스프링 묶음으로 계산해요. 각 축에 여러 층이 있을 수 있어요.</li><li>각 층의 숫자 1~4는 감쇠·속도·쏠림·랜덤 폭이에요. 충격은 쏠림 + 랜덤 폭 × (2 × 난수 − 1)로 정해져요.</li><li>Recovery는 반동이 그때부터 처음 줄어드는 기능이 아니에요. 스프링은 원래도 복원되고, 마지막 충격 후 delay가 지나면 감쇠·복원 속도를 Recovery 값으로 바꿔요. delay = 0.1이면 600RPM 초과의 균일 연사 중에는 그 전환이 보통 일어나지 않아요.</li><li>충격에는 (1 − firemodeStability) × (1 − 자세 stability)가 곱해져요. 입력 장치 보정은 카메라 충격에 추가로 마우스·키보드 ×1, 터치 ×0.75, 컨트롤러 ×0.5예요.</li></ul><details class="note"><summary>코드 근거</summary><p>RecoilSprings: getUniformDist·applyImpulse·step / FirearmObject: impulseSprings / MainCameraObject: applyImpulse</p></details></article>
 
-  <article class="e"><h3>파츠 효과를 합치는 순서</h3>
-    <p>설정 → 더하기 → 합산 배율 → 곱하기 순이에요. 합산 배율은 (1 + 늘리는 값의 합) ÷ (1 + 줄이는 값의 합)이라, −20% 두 개를 겹치면 −36%가 아니라 −29%예요.</p>
-    <p>설정은 우선순위가 높은 쪽이 이기고, 같으면 나중 칸(조준경 → 총구 → 언더배럴 → 기타 → 탄약)이 이겨요. 기본 파츠는 0, 총 전용 설정은 1, 체인소 그립은 2예요.</p></article>
+  <article class="e"><h3>파츠 계산 순서와 −20% 표기의 함정<span class="b fix">정정</span></h3><p>실제 순서는 <b>설정 → 더하기 → 표 삽입 → 표 삭제 → 일반 상대 배율 → 일반 직접 배율 → 표 상대 배율 → 표 직접 배율 → 함수 보정</b>이에요. 숫자 몇 개만 보면 단순하지만, 모든 파츠를 네 단계로만 설명할 수는 없어요.</p><p>relativeMultipliers의 값 −0.2는 단독으로도 ×0.8이 아니라 <b>÷1.2 = 약 −16.67%</b>예요. −0.2 두 개는 ÷1.4 = 약 −28.57%예요. trueMultipliers의 ×0.8 두 개라면 ×0.64가 맞아요.</p><p>setters 충돌은 absolutePriority → priority → 뒤에 수집된 항목 순으로 결정돼요. 일반 파츠보다 무기·세트 전용 modifier가 나중에 모이며 기본 priority 1을 받아요. 보통 파츠는 0, Chainsaw Grip의 일부 설정은 2예요. 파츠 칸 순서는 Optics → Barrel → Underbarrel → Other → Ammo예요.</p><details class="note"><summary>코드 근거</summary><p>StatModifierUtils: modifierTypeOrder·applyRelativeMultipliers·applyTrueMultipliers·isHigherPriority / SetFunctions / ContentUtils: compileWeaponData</p></details></article>
 
-  <article class="e"><h3>조준경 등급의 진짜 의미</h3>
-    <p>레드닷·아이언·배율 스코프 등급은 걷기 흔들림이 아니라 관성 흔들림(이동하거나 시점을 돌릴 때 총이 늦게 따라오는 흔들림)에 곱해져요.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>등급</th><th class="n">회전 성분</th><th class="n">위치 성분</th></tr></thead>
-      <tbody>
-        <tr><td>배율 스코프</td><td class="n">20%</td><td class="n">10%</td></tr>
-        <tr><td>레드닷·홀로</td><td class="n">40%</td><td class="n">20%</td></tr>
-        <tr><td>아이언</td><td class="n">60%</td><td class="n">30%</td></tr>
-      </tbody></table></div></article>
+  <article class="e"><h3>조준경 등급은 관성 흔들림 계수에 들어가요<span class="b fix">정정</span></h3><p>완전히 조준했을 때 아래 계수를 사용해요. 조준 전환 중에는1에서 해당 값으로 보간하며, 활성 조준점의 blackscope·midscope를 봐요. 따라서 보조 조준으로 바꾸면 등급도 달라질 수 있어요.</p><div class="scroll"><table><thead><tr><th>등급</th><th>회전 성분</th><th>위치 성분</th></tr></thead><tbody><tr><td>blackscope</td><td>×0.2</td><td>×0.1</td></tr><tr><td>midscope</td><td>×0.4</td><td>×0.2</td></tr><tr><td>둘 다 없음(아이언 등)</td><td>×0.6</td><td>×0.3</td></tr></tbody></table></div><p>이 계수는 관성 흔들림에 적용되고 aimswingmod·swingmod가 추가로 곱해져요. 걷기 흔들림·총 반동·카메라 반동 전체를 이 비율로 줄이는 기능은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>FirearmObject: step의 v388·v389·v390·v391 / 활성 조준점</p></details></article>
 
-  <article class="e"><h3>데미지 그래프</h3>
-    <p>모든 총의 그래프 첫 지점은 0스터드예요. 지점이 3개인 총(대부분)은 0스터드, 최대 데미지 끝, 최소 데미지 시작으로 되어 있어요. 데미지는 쏜 위치에서 맞은 곳까지의 직선거리로 계산해요.</p>
-    <ul>
-      <li>.223 Rem의 사거리 −25%는 최대 데미지 사거리에만 걸려요.</li>
-      <li>SAP의 데미지 −10%는 최대 데미지 구간에만 걸리고 최소 데미지는 그대로예요.</li>
-    </ul></article>
+  <article class="e"><h3>데미지 그래프는 점 사이를 직선으로 연결해요<span class="b fix">정정</span></h3><p>첨부 총기 292개의 원본 damageGraph는 모두 첫 점이 0스터드예요. 이 중 276개는 세 점이고, 나머지는 네 점 이상이에요. 명중 데미지는 발사 원점과 명중 위치의 직선거리에서 그래프를 보간한 다음 부위 배율을 곱해요.</p><ul><li>.223 Remington 공통 데이터는 첫 두 점의 distance에 ×0.75를 적용해요. 일반적인 세 점 그래프에서는 최대 데미지 유지 구간이 짧아져요.</li><li>Super Armor Piercing 공통 데이터는 첫 두 점 damage ×0.9, 첫 두 점과 마지막 점 distance ×0.9예요. 최소 데미지가 공통 파츠에서 그대로라도, AK-12 같은 무기 전용 보정이 마지막 점 damage를 추가로 바꿀 수 있어요.</li><li>파츠 적용 후 그래프를 거리순으로 정렬하고, 첫 점 거리가 0보다 크면 0스터드 점을 보충해요.</li></ul><details class="note"><summary>코드 근거</summary><p>WeaponUtils: interpolateDamageGraph / HitDetectionInterface / ContentUtils: compileWeaponData / .223 Remington·Super Armor Piercing / AK12</p></details></article>
 
-  <article class="e"><h3>탄도</h3>
-    <ul>
-      <li>중력은 로블록스 기본값 196.2예요. 탄은 2초 뒤 사라져서 최대 사거리는 탄속 × 2예요.</li>
-      <li>관통력은 뚫을 수 있는 벽 두께의 합이에요. 벽을 뚫어도 탄속과 데미지가 줄지 않아요.</li>
-      <li>자이로젯은 탄이 날아가면서 가속해요(6000).</li>
-    </ul></article>
+  <article class="e"><h3>탄도·수명·관통<span class="b fix">정정</span></h3><ul><li>탄 가속도는 기본 (0, −196.2, 0)에 무기 bulletaccel × 초기 발사 방향을 더한 값이에요. 탄 수명 설정은 2초예요.</li><li><b>탄속 ×2는 수평 발사·추가 가속도 없음·장애물 없음일 때의 수평 도달 거리</b>예요. 모든 탄의 실제 최대 사거리나 곡선 경로 길이라는 뜻은 아니에요. 자이로젯 두 종은 bulletaccel = 6000으로 가속돼요.</li><li>관통은 진행 방향에서 계산한 두께를 남은 penetrationdepth에서 차감해요. 관통 가능한 조건은 두께 &lt; 남은 관통력으로, 같으면 통과하지 않아요.</li><li>클라이언트 계산에는 관통 자체로 탄속·데미지를 깎는 항이 없어요. 다만 거리에 따른 데미지 변화와 서버의 판정은 별개예요.</li></ul><details class="note"><summary>코드 근거</summary><p>PublicSettings / FirearmObject: fireRound / BulletObject: step / GYROJET CARBINE·GYROJET MARK I</p></details></article>
 
-  <article class="e"><h3>히트박스와 맵 부품</h3>
-    <ul>
-      <li>히트박스 크기는 머리 1×1×1, 몸통 2×2×1, 팔다리 1×2×1스터드예요. 여기에 반경(일반 0.1, 콘솔 서버의 컨트롤러 전용 0.5)이 더해져 모서리가 둥글어져요.</li>
-      <li>팔다리 배율 항목도 있지만 실제로 쓰는 총은 없어요. 팔다리는 항상 기본 데미지예요.</li>
-      <li>맵에서 이름이 "Hitmark", "HitmarkHead"인 부품은 맞히면 히트마커가 떠요(연습 표적). "killbullet" 부품은 탄을 지우고, "Window"는 깨져요.</li>
-      <li>기본 예광탄 색은 빨강(255, 94, 94)이에요.</li>
-    </ul></article>
+  <article class="e"><h3>히트박스는 공격하는 쪽의 입력 조건도 봐요<span class="b fix">정정</span></h3><ul><li>기본 상자 크기는 머리 1×1×1, 몸통 2×2×1, 팔다리 1×2×1스터드이고, 둥근 모서리 판정용 radius는 Desktop 0.1·Console 0.5예요.</li><li>클라이언트는 <b>콘솔 서버이며 공격하는 내 입력이 pure controller인 경우</b> Console 구성을 선택해요. “컨트롤러로 플레이하는 상대의 몸만 커진다”는 뜻이 아니에요. 공유 함수의 서버 분기는 콘솔 서버에서 Console 구성을 반환해요.</li><li>총기 292개 원본에는 multlimb가 없어서 기본 팔다리 배율은 1이에요. 근접무기는 별도의 부위별 판정·피해 구조예요.</li><li>고정된 Hitmark·HitmarkHead 부품은 맞으면 연습용 히트마커를 만들고, Window는 창문 파괴 처리를 호출해요. killbullet은 탄 삭제를 요청해요. 기본 탄 색은 (255, 94, 94)예요.</li></ul><details class="note"><summary>코드 근거</summary><p>HitBoxConfig·DesktopHitBox·ConsoleHitBox / InputInterface: isPureController / ReplicationInterface: playerHitCheck·playerMeleeHitCheck / HitDetectionInterface·BulletObject</p></details></article>
 
-  <article class="e"><h3>산탄은 랜덤이 아니에요</h3>
-    <p>펠릿이 황금각 137.5°로 도는 해바라기 씨 배열에 놓이고, 반지름은 정규분포 모양으로 바뀌어요. 매 발 이 무늬가 저불일치 수열(R2)로 조금씩 회전·이동해요. 그래서 펠릿이 뭉치거나 구멍이 생기지 않아요.</p>
-    <p>반면 지향사격 퍼짐은 원이 아니라 정사각형 안에서 고르게 뽑아서, 대각선으로 최대 약 41% 더 튀어요.</p></article>
+  <article class="e"><h3>산탄은 규칙적인 수열을 이용하지만 구멍이 없는 건 아니에요<span class="b fix">정정</span></h3><p>고유 퍼짐이 있는 탄은 펠릿 순번과 약 137.5°의 황금각을 이용하고, 반지름을 로그 변환해 중심에 더 밀집된 분포를 만들어요. 매 발의 변화에는 2차원 SamplePointGenerator 수열을 써요. 완전한 독립 난수 산탄과는 달라요.</p><p>그렇다고 탄끼리 뭉치거나 빈 공간이 생기지 않는 것은 아니에요. 펠릿 수·spread·가로세로 편향에 따라 모양이 달라져요. 지향사격의 별도 퍼짐은 <b>스프링에 주는 2축 충격</b>을 정사각형 난수 범위에서 뽑는 구조라, 이것을 최종 탄착이 정사각형에 균일하게 분포한다고 해석하면 안 돼요.</p><details class="note"><summary>코드 근거</summary><p>FirearmObject: fireRound·impulseSprings / SamplePointGenerator</p></details></article>
 
-  <article class="e"><h3>제압 공식과 둔감화</h3>
-    <p>제압 = 총 제압값 × 탄속 ÷ 512 × (그 거리 데미지 ÷ 0스터드 데미지) ÷ 빗나간 거리(최소 2스터드)</p>
-    <ul>
-      <li>15스터드 안으로 스치면 쏜 사람이 "Suppressed Enemy!" 보너스를 받아요.</li>
-      <li>50스터드 안은 탄 지나가는 소리, 저격총은 25스터드 안에서 크랙음이 나요.</li>
-      <li>연사 중에는 최대치(1.25)가 유지되지만, 띄엄띄엄 맞으면 바닥값이 0.5 쪽으로 내려가요. 이 값은 접속해 있는 동안 초기화되지 않아서, 약 20번 겪으면 단발 제압이 처음의 45% 정도로 약해져요.</li>
-    </ul></article>
+  <article class="e"><h3>제압에는 거리와 시간 보정이 함께 들어가요<span class="b fix">정정</span></h3><p><b>S = M(t) × suppression × bulletspeed ÷ 512 × [D(d)/D(0)] ÷ max(빗나간 거리, 2)</b>예요. d는 발사 위치에서 관찰 카메라까지의 거리이고, bulletspeed는 이 식에서 무기 스탯을 써요.</p><ul><li>탄이 카메라 옆을 통과하는 구간을 확인해 50스터드 미만이면 whizz, snipercrack 무기는 25 미만이면 큰 크랙음을 재생해요. 15 미만이면 서버에 suppressionassist 요청을 보내요. 이것만으로 보상 지급을 확정할 수는 없어요.</li><li>M(t)는 초기 1.25예요. 갱신 때 기준값을 (현재 M − 0.5)/e^0.125 + 0.5로 바꾸고, 직후에는 다시 1.25에서 그 기준값 쪽으로 내려오는 시간식을 써요.</li><li>충분히 띄운 사건을 반복하면 기준값이 0.5에 가까워져요. “20번 뒤 45%”는 매번 충분히 시간이 지난다는 가정의 근삿값이고, 연사·펠릿 처리·이벤트 간격에 따라 달라요. 모듈 내부에는 사망 시 이 기준값을 초기화하는 코드가 없어요.</li></ul><details class="note"><summary>코드 근거</summary><p>ProjectileInterface: suppressionMult·normalizeSuppression·newbullets</p></details></article>
 
-  <article class="e"><h3>이동 수치</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>항목</th><th>값</th></tr></thead>
-      <tbody>
-        <tr><td>달리기 / 앉아 걷기 / 엎드려 기기</td><td>걷기 × 1.5 / × 1/2 / × 1/4</td></tr>
-        <tr><td>슬라이드 시작 속도</td><td>35 (무기 이동 속도 14 기준)</td></tr>
-        <tr><td>다이브</td><td>시작 앞 45·위 35 → 0.1초 앞 55·위 32 → 0.4초 앞 25·아래 10</td></tr>
-        <tr><td>징거스</td><td>슬라이드에서 일어설 때 직전 0.1초 최고 속도, 낙하 속도 75% 반영, 최대 70</td></tr>
-        <tr><td>다이브 후 슬라이드 감속</td><td>80 (일반 슬라이드 33)</td></tr>
-        <tr><td>스태미나 모드</td><td>바 0~1, 초당 0.2 회복, 슬라이드·다이브 0.28, 점프 슬라이드 0.1 소모</td></tr>
-        <tr><td>스태미나 모드 보상</td><td>슬라이드 쿨다운 0.9 → 0.65초, 일어서기 가속 2 → 3</td></tr>
-      </tbody></table></div></article>
+  <article class="e"><h3>이동 수치와 쿨다운의 두 단계<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>항목</th><th>기본 일반 이동 기준</th></tr></thead><tbody><tr><td>달리기 / 앉기 / 엎드리기</td><td>기본 걷기 ×1.5 / ×0.5 / ×0.25</td></tr><tr><td>슬라이드 초기 설정</td><td>35 × [1 + 0.5 × (기본 걷기 속도/14 − 1)] × 방향 계수. 그 밖의 진입 속도·스태미나 처리 있음</td></tr><tr><td>다이브 속도 지정</td><td>시작 전방45·위35 → 약0.1초 전방55·위32 → 약0.4초 전방25·아래10</td></tr><tr><td>슬라이드 감속 설정</td><td>일반33, 엎드림 연계80; 공중·바닥 경사·속도 처리 별도</td></tr><tr><td>일어서며 속도를 보존하는 처리</td><td>직전0.1초 기록, 낙하 수직 성분 ×0.75, 상승 수직 성분 제외, 속도 상한70</td></tr><tr><td>스태미나</td><td>0~1, 활성 모드에서 초당0.2 회복. 슬라이드·다이브0.28, 점프 연계0.1 추가</td></tr><tr><td>슬라이드 재사용 제한</td><td>pre 0.2초 + cooldown 0.9초. 스태미나 모드는0.2+0.65초</td></tr><tr><td>다이브 재사용 제한</td><td>pre 0.6초 + cooldown 1.1초. 스태미나 모드는0.6+1.0초</td></tr></tbody></table></div><p>쿨다운 변수 하나의 값과 전체 재사용 대기 시간을 구분했어요. task 지연과 실행 프레임 때문에 표의 시간은 정확한 실측 시간이 아니라 설정상 합계예요.</p><details class="note"><summary>코드 근거</summary><p>CharacterConfig: casualMovementConfig / CharacterObject: 입력 처리·setMovementMode</p></details></article>
 
-  <article class="e"><h3>스폰 위치 가중치</h3>
-    <p>적이 35스터드 안에 있으면 강한 감점(−15), 적과 200·500스터드 거리가 최고점, 600스터드를 넘으면 0이에요. 아군이 45스터드 근처면 가점, 적 시야 안이면 감점(가까우면 −50, 200스터드면 −2)이에요.</p></article>
+  <article class="e"><h3>스폰 후보의 가중치<span class="b est">범위 제한</span></h3><p>공유 SpawnWeights의 Main 표는 적 거리 0~35스터드에 −15, 200·500스터드에 +1, 600스터드에 0을 줘요. 아군 거리 45스터드에는 +1, 적 시야에 노출된 가까운 위치에는 −50, 200스터드에는 −2예요.</p><p>별도의 Test 표도 있어요. 이는 스폰 후보를 평가할 때 쓰는 설정이지 “이 조건이면 반드시 그곳에 스폰한다”는 확정 규칙은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>SpawnWeights / SpawnObject</p></details></article>
 
-  <article class="e"><h3>조준 보조 기능의 한계</h3>
-    <ul>
-      <li>에임 어시스트(패드·모바일)는 몸 중심선(루트 −2 ~ +1스터드)만 따라가요. 헤드는 직접 올려야 해요. 탄 낙차는 계산해요.</li>
-      <li>조준 보정 세기 최대치는 터치 0.75, 컨트롤러 0.5예요. 컨트롤러 지향사격 입력 보정은 기본값 0이에요.</li>
-      <li>Ballistics Tracker는 완전히 조준했을 때 화면 중앙 약 5.7° 안의 적 한 명에게 낙차를 보정한 점을 찍어요. 적의 움직임은 보정하지 않아요.</li>
-    </ul></article>
+  <article class="e"><h3>조준 보조와 Ballistics Tracker<span class="b fix">정정</span></h3><ul><li>에임 어시스트의 추적 대상은 캐릭터 중심의 수직 선분(루트 −2~+1스터드)으로 전달돼요. 낙차 계산도 있지만 헤드에 자동으로 고정하는 기능으로 설명할 수는 없어요.</li><li>설정상 조준 Follow Strength 상한은 터치 0.75, 컨트롤러 0.5예요. 기본값은 각각 약0.667과0.5이고, 입력 감쇠 강도는 별도 설정이에요. 컨트롤러 지향사격 입력 감쇠의 기본값은0이에요.</li><li>Ballistics Tracker는 조준 스프링이0.95 이상일 때 작동하고, 가림 검사를 통과한 적 중 계산된 탄도 방향과 시선의 내적이0.995보다 큰 대상을 골라 점을 찍어요. 반각 약5.73°예요.</li><li>대상의 이동 속도·가속도를0으로 넣으므로 이동 예측은 하지 않아요. 이 점은 낙차 보정 참고점이에요.</li></ul><details class="note"><summary>코드 근거</summary><p>MainCameraObject·AimAssist / ThirdPersonObject / SettingsTouchAimAssistFollowStrength·SettingsControllerAimAssistFollowStrength·SettingsControllerAimAssistHipInputStrength / FirearmTracker</p></details></article>
 
-  <article class="e"><h3>래그돌</h3>
-    <p>시체가 튕기는 힘은 마지막 총알 데미지 × Ragdoll Fun Factor예요. 수류탄은 Fun Factor가 1이 아니면 ×(5 × 값)이 더 붙어서, 0.5로 줄여도 수류탄 시체는 2.5배 세게 날아가요. 시체는 5초 뒤 사라지기 시작해서 30초 뒤 삭제돼요.</p></article>
+  <article class="e"><h3>래그돌은 5초 뒤 멈추고 30초 뒤 사라지기 시작해요<span class="b fix">정정</span></h3><p>총탄 충격은 피해 추정치 × Ragdoll Fun Factor예요. 산탄은 피해 추정치에 pelletcount ×0.7을 더 곱하는 보정도 있어서 “마지막 한 발 피해 그대로”는 아니에요.</p><p>수류탄은 별도 폭발 힘을 쓰며 Fun Factor가1이 아닐 때만 5 × 설정값을 곱해요. 따라서0.5도 기본값1보다2.5배의 인자가 돼요.</p><p>시체 본체는 생성5초 후 고정되고, 30초 후20단계 페이드가 시작된 다음 삭제돼요. “5초부터 페이드, 30초에 즉시 삭제”가 아니에요.</p><details class="note"><summary>코드 근거</summary><p>RagdollInterface: createRagdoll</p></details></article>
+
+<article class="e"><h3>부위 배율은 그래프 피해 다음에 적용돼요<span class="b fix">추가</span></h3><p>거리 보간 피해에 헤드·몸통 배율을 곱해요. 따라서 원본 damageGraph가 같아도 부위 배율이 다르면 필요한 명중 횟수가 달라져요. “몸통 한 방” 표를 머리·팔다리·산탄 전체 피해 표로 읽으면 안 돼요.</p><p>공유 interpolateDamageGraph는 마지막 점 뒤에도 마지막 피해를 사용해요. 그래프가 끝난다고 피해가0이 되는 것은 아니지만, 탄 수명·장애물·서버 판정의 한계는 남아요.</p><details class="note"><summary>코드 근거</summary><p>WeaponUtils: interpolateDamageGraph / HitDetectionInterface</p></details></article>
 </section>
 
 <section id="guns" data-t="g">
-  <header><h2>총 데이터</h2><p>파츠 없는 기본 수치(11.16)로 직접 계산했어요.</p></header>
+  <header><h2>총 데이터</h2><p>첨부 원본 수치로 계산했어요. 특수·시험 무기도 포함되며 조건은 항목마다 적었어요.</p></header>
 
-  <article class="e"><h3>사격 모드에 숨은 반동 보정</h3>
-    <p>27종에 있어요. 게임 화면에는 표시되지 않아요.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>총</th><th>보정</th></tr></thead>
-      <tbody>
-        <tr><td>AEK-971</td><td>점사 −40%, 단발 −20%</td></tr>
-        <tr><td>AEK-973S</td><td>점사 −40%</td></tr>
-        <tr><td>FAMAS 계열</td><td>점사 −30%, 단발 −20%</td></tr>
-        <tr><td>GERAT 90</td><td>연사 −25%, 단발 −30%</td></tr>
-        <tr><td>RM 277</td><td>연사 모드 2개(740·520RPM), 두 번째 −25%, 단발 −40%</td></tr>
-        <tr><td>AK-308</td><td>점사 −25%, 단발 −10%</td></tr>
-        <tr><td>AK-12 계열</td><td>점사(1000RPM)가 오히려 +15%</td></tr>
-        <tr><td>MK12 SPR</td><td>연사가 오히려 +58%</td></tr>
-        <tr><td>VSS</td><td>단발 −15%, 연사 +22%</td></tr>
-      </tbody></table></div></article>
+  <article class="e"><h3>사격 모드별 반동 보정은 27종에 있어요<span class="b fix">정정</span></h3><p>아래는 무파츠 원본의 firemodestability로 인한 <b>반동 충격 변화</b>예요. 화면에서 관찰되는 총 반동 전체가 이 비율로만 정해지는 것은 아니에요. AK-12 계열·FAMAS 계열도 무기마다 값이 달라요.</p><div class="scroll"><table><thead><tr><th>총기 표시 이름</th><th>모드·연사 속도·충격 변화</th></tr></thead><tbody><tr><td>AN-94</td><td>연사 600RPM: 기본 / 2점사 1800RPM: -20% / 단발 600RPM: 기본</td></tr><tr><td>FAMAS F1</td><td>연사 900RPM: 기본 / 3점사 1000RPM: -30% / 단발 900RPM: -20%</td></tr><tr><td>AEK-971</td><td>연사 900RPM: 기본 / 3점사 900RPM: -40% / 단발 900RPM: -20%</td></tr><tr><td>GERAT 90</td><td>3점사 2100RPM: 기본 / 연사 460RPM: -25% / 단발 460RPM: -30%</td></tr><tr><td>AK-12</td><td>연사 700RPM: 기본 / 3점사 1000RPM: +15% / 단발 700RPM: 기본</td></tr><tr><td>AK-12M</td><td>연사 700RPM: 기본 / 2점사 700RPM: -15% / 단발 700RPM: 기본</td></tr><tr><td>AK-15</td><td>연사 700RPM: 기본 / 2점사 700RPM: -25% / 단발 700RPM: 기본</td></tr><tr><td>VHS-D2</td><td>연사 850RPM: 기본 / 단발 850RPM: -20%</td></tr><tr><td>FAMAS G2</td><td>연사 1000RPM: 기본 / 3점사 1100RPM: -30% / 단발 1000RPM: -20%</td></tr><tr><td>FAMAS?</td><td>연사 900RPM: 기본 / 3점사 1000RPM: -30% / 단발 900RPM: -20%</td></tr><tr><td>M7 NGSW</td><td>연사 800RPM: 기본 / 단발 550RPM: -10%</td></tr><tr><td>AK-308</td><td>연사 700RPM: 기본 / 2점사 700RPM: -25% / 단발 700RPM: -10%</td></tr><tr><td>MK17 ULTRALIGHT</td><td>바이너리 480RPM: 기본 / 단발 480RPM: -15%</td></tr><tr><td>M417A2</td><td>연사 600RPM: 기본 / 단발 450RPM: -20%</td></tr><tr><td>NEOWULF ECR</td><td>연사 680RPM: 기본 / 3점사 680RPM: -15% / 단발 680RPM: 기본</td></tr><tr><td>RM 277</td><td>연사 740RPM: 기본 / 연사 520RPM: -25% / 단발 360RPM: -40%</td></tr><tr><td>AK-9</td><td>연사 700RPM: 기본 / 3점사 1000RPM: +15% / 단발 700RPM: 기본</td></tr><tr><td>AK-12U</td><td>연사 800RPM: 기본 / 3점사 1000RPM: +15% / 단발 800RPM: 기본</td></tr><tr><td>AEK-973S</td><td>연사 900RPM: 기본 / 3점사 900RPM: -40% / 단발 900RPM: 기본</td></tr><tr><td>VSS VINTOREZ</td><td>단발 620RPM: -15% / 연사 700RPM: +22%</td></tr><tr><td>SVK-12</td><td>단발 550RPM: -15% / 연사 700RPM: 기본 / 3점사 1000RPM: -15%</td></tr><tr><td>MK12 SPR</td><td>단발 700RPM: 기본 / 연사 680RPM: +58%</td></tr><tr><td>MG80</td><td>연사 800RPM: 기본 / 3점사 800RPM: -20% / 단발 800RPM: -20%</td></tr><tr><td>RPK-12</td><td>연사 700RPM: 기본 / 3점사 1000RPM: +15% / 단발 700RPM: 기본</td></tr><tr><td>RPK-16</td><td>연사 700RPM: 기본 / 2점사 700RPM: -22% / 단발 700RPM: 기본</td></tr><tr><td>FIVE-0</td><td>바이너리 800RPM: 기본 / 2점사 800RPM: +10%</td></tr><tr><td>FAMAS COMMANDO</td><td>연사 1100RPM: 기본 / 3점사 1200RPM: -30% / 단발 1100RPM: 기본</td></tr></tbody></table></div><details class="note"><summary>코드 근거</summary><p>WeaponDatabase 292종 중 firemodestability가 있는 27종 / FirearmObject: impulseSprings</p></details></article>
 
-  <article class="e"><h3>가까이선 한 방이 안 되고 멀리서 한 방인 총</h3>
-    <p>데미지가 거리에 따라 올라가는 총들이에요.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>총</th><th>몸통 한 방 구간</th></tr></thead>
-      <tbody>
-        <tr><td>M82A1</td><td>80~250스터드</td></tr>
-        <tr><td>THE FIX</td><td>50스터드 이상</td></tr>
-        <tr><td>TIMBERWOLF</td><td>45~168스터드</td></tr>
-        <tr><td>DRAGUNOV SVDS</td><td>35~77스터드</td></tr>
-        <tr><td>MINI FIX (카빈)</td><td>45~97스터드</td></tr>
-        <tr><td>GYROJET CARBINE</td><td>135스터드 이상</td></tr>
-        <tr><td>GYROJET MARK I (권총)</td><td>161스터드 이상</td></tr>
-      </tbody></table></div>
-    <p>KORD-R은 데미지 95 × 몸통 1.25로 몸통 한 방이 나는 LMG예요. 11.17에서 몸통 배율이 1.1이 돼도 약 80스터드까지 한 방이에요.</p></article>
+  <article class="e"><h3>가까이보다 중거리에서 몸통 한 방이 되는 총<span class="b est">계산</span></h3><p>HP 100, 무파츠, 몸통 1회 명중 기준으로 damageGraph를 선형 보간한 구간이에요. 소수 경계는 약값이고, 탄이 실제로 도달할 수 있는 거리 안에서만 의미가 있어요.</p><div class="scroll"><table><thead><tr><th>총기</th><th>몸통 한 방 구간(스터드)</th></tr></thead><tbody><tr><td>M82A1 (내부 M107)</td><td>80~250</td></tr><tr><td>THE FIX</td><td>50 이상</td></tr><tr><td>TIMBERWOLF</td><td>약44.44~169</td></tr><tr><td>DRAGUNOV SVDS</td><td>약34.29~77.14</td></tr><tr><td>MINI FIX</td><td>약44.12~97.06</td></tr><tr><td>GYROJET CARBINE</td><td>약134.67 이상</td></tr><tr><td>GYROJET MARK I</td><td>약160.67 이상</td></tr></tbody></table></div><p>KORD-R은 분류상 LMG지만 내부 type은 SNIPER예요. 첨부 값은 최대 피해95·몸통 배율1.25이며 몸통 한 방 구간은 0~110스터드예요. 첨부에서 확인할 수 없는 후속 패치 수치는 제외했어요.</p><details class="note"><summary>코드 근거</summary><p>각 무기 damageGraph·multtorso / WeaponUtils: interpolateDamageGraph</p></details></article>
 
-  <article class="e"><h3>200스터드에서의 낙차</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>총</th><th class="n">탄속</th><th class="n">낙차</th></tr></thead>
-      <tbody>
-        <tr><td>돌격소총 평균</td><td class="n">−</td><td class="n">0.57</td></tr>
-        <tr><td>UAR HBAR (가장 적음)</td><td class="n">3,300</td><td class="n">0.36</td></tr>
-        <tr><td>VKS (저격총)</td><td class="n">900</td><td class="n">4.8</td></tr>
-        <tr><td>M1911 계열</td><td class="n">830</td><td class="n">5.7</td></tr>
-        <tr><td>G21 (가장 많음)</td><td class="n">810</td><td class="n">6.0</td></tr>
-      </tbody></table></div>
-    <p>캐릭터 키가 약 5스터드라 VKS로 200스터드 머리를 정조준하면 발밑에 떨어지는 셈이에요.</p></article>
+  <article class="e"><h3>200스터드 수평 발사에서의 탄 낙차<span class="b est">계산</span></h3><p>추가 가속도·장애물·영점 보정 없이 수평으로 발사한다고 놓으면 낙차는 <b>½ ×196.2×(200/탄속)²</b>예요. 단위는 스터드이며, 조준경의 화면상 조준점 오차를 그대로 뜻하지는 않아요.</p><div class="scroll"><table><thead><tr><th>총기</th><th>탄속(스터드/초)</th><th>낙차(스터드)</th></tr></thead><tbody><tr><td>UAR HBAR</td><td>3,300</td><td>0.360</td></tr><tr><td>VKS</td><td>900</td><td>4.844</td></tr><tr><td>M1911A1</td><td>830</td><td>5.696</td></tr><tr><td>G21</td><td>810</td><td>5.981</td></tr><tr><td>BOXY BUSTER</td><td>500</td><td>15.696</td></tr><tr><td>TOY M1911</td><td>350</td><td>32.033</td></tr><tr><td>RAILGUN</td><td>12,500</td><td>0.025</td></tr></tbody></table></div><p>UAR HBAR가 전체 데이터의 최소 낙차, G21이 최대 낙차라는 원문은 틀렸어요. 장난감·특수 무기까지 포함하면 범위가 더 넓어요. 자이로젯처럼 가속하는 탄에는 이 단순식을 쓰면 안 돼요.</p><details class="note"><summary>코드 근거</summary><p>각 무기 bulletspeed / PublicSettings / FirearmObject: fireRound</p></details></article>
 
-  <article class="e"><h3>제압이 가장 강한 조합</h3>
-    <p>모든 총과 장착 가능한 파츠 조합을 계산했어요. 참고로 AK-12 기본형은 50스터드 한 발 2.9, 초당 약 34예요.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>거리</th><th>한 발 기준 1위</th><th>초당 1위 (연사 총)</th></tr></thead>
-      <tbody>
-        <tr><td>50</td><td>DSR-50 + Loudener + M903 SLAP (71.3)</td><td>USAS-12 + Loudener + Rubber Pellets (327)</td></tr>
-        <tr><td>100</td><td>DSR-50 + Loudener + M903 SLAP (71.3)</td><td>USAS-12 + Loudener + Rubber Pellets (192)</td></tr>
-        <tr><td>150</td><td>DSR-50 + Loudener + M903 SLAP (64.5)</td><td>M60E6 + Loudener + 열화우라늄탄 (182)</td></tr>
-        <tr><td>200</td><td>M82A1 + Loudener + M107 M903 SLAP (59.1)</td><td>M60E6 + Loudener + 열화우라늄탄 (198)</td></tr>
-        <tr><td>250~300</td><td>M82A1 + Long Barrel (Sweetspot) + SLAP</td><td>M60E6 + Loudener + 열화우라늄탄 (198)</td></tr>
-        <tr><td>400~500</td><td>M82A1 + Loudener + SLAP (약 45)</td><td>M60E6 + Loudener + 열화우라늄탄 (198)</td></tr>
-      </tbody></table></div>
-    <p>Loudener(제압 ×1.25, 탄속 ×0.95)가 거의 모든 1위에 들어가요. 거리에 따라 데미지가 오르는 탄은 원거리에서 제압이 더 커져요.</p></article>
+  <article class="e"><h3>제압 조합을 비교할 때 고정해야 할 조건<span class="b fix">정정</span></h3><p>원문의 “모든 조합을 계산한 거리별 1위” 표는 완전한 조합 탐색과 동일 조건 검증의 근거가 없어 제외했어요. 시간 보정 M(t), 빗나간 거리, 관찰 위치, 펠릿 수와 사격 모드를 정하지 않으면 숫자를 직접 비교할 수 없어요.</p><ul><li>같은 총·거리·시간 조건에서 Loudener 공통 효과는 suppression ×1.25, bulletspeed ×0.95예요. 다른 보정이 없다면 두 항의 곱은 ×1.1875예요.</li><li>거리에 따라 피해가 올라가는 총은 D(d)/D(0) 때문에 원거리 제압 계수가 커질 수 있어요.</li><li>한 발 계수에 RPM/60을 곱한 값은 지속 연사 시의 단순 지표예요. 재장전·점사 간격·제압 시간 함수까지 반영한 실제 화면 흔들림 순위는 아니에요.</li></ul><details class="note"><summary>코드 근거</summary><p>Loudener AttachmentData / ProjectileInterface: newbullets·suppressionMult</p></details></article>
 
-  <article class="e"><h3>반동이 소수점까지 똑같은 총</h3>
-    <ul>
-      <li>M416C = P90</li>
-      <li>BOXY BUSTER(장난감) = LA RATA(골든 ZIP 22) = GSP</li>
-      <li>MK16 SOCOM(돌격소총) = MK16 SOCOM CQB(PDW)</li>
-      <li>R-10/22(DMR) = RCS-10/22(저격총)</li>
-      <li>F90 MBR = EF88, COILGUN = E-GUN</li>
-      <li>"UAR?", "FAMAS?", "L85A2?"는 원본과 데미지·연사·탄속·탄창·반동이 모두 같아요. 겉모습만 다른 총이에요.</li>
-    </ul></article>
+  <article class="e"><h3>원본 recoil 표가 완전히 같은 무기들<span class="b fix">정정</span></h3><ul><li>F90 MBR = EF88</li><li>L85A2 = L85A2?</li><li>UAR? = UAR A1</li><li>FAMAS F1 = FAMAS?</li><li>MK16 SOCOM = MK16 SOCOM CQB</li><li>R-10/22 = RCS-10/22</li><li>COILGUN = E-GUN</li><li>P90 = M416C</li><li>BOXY BUSTER = GSP = LA RATA</li></ul><p>비교 범위는 recoil 표 전체예요. 연사 속도·모드 보정·고유 퍼짐·조준점·장착 파츠까지 동일하다는 뜻은 아니에요. 외형 변형 총도 다른 필드까지 확인하지 않고 “겉모습만 다르다”고 단정하면 안 돼요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase 292종 recoil 표 구조·값 전체 비교</p></details></article>
 
-  <article class="e"><h3>극단값</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>항목</th><th>값</th></tr></thead>
-      <tbody>
-        <tr><td>가장 빠른 이동</td><td>맨주먹, 너클, 부채 17.5 (달리기 26.25)</td></tr>
-        <tr><td>가장 느린 이동</td><td>KORD-R, NTW-20, 츠바이핸더, STOPPER 10</td></tr>
-        <tr><td>가장 큰 탄창</td><td>ChainSAW 200, MGV-176 161</td></tr>
-        <tr><td>가장 많은 예비탄</td><td>MGV-176 322</td></tr>
-        <tr><td>파츠가 가장 많은 총</td><td>M82A1 157개 (TRG-42, M1903은 조준경만 100개)</td></tr>
-        <tr><td>파츠가 가장 적은 총</td><td>ChainSAW 32개, 조준경 0개</td></tr>
-        <tr><td>탄약 선택지 최다</td><td>X46A2, VECTOR 45, SA58 SPR, M79 THUMPER 8종</td></tr>
-        <tr><td>재밌는 극단값</td><td>ROPOD SHOTTY 헤드 ×250, KEK-50 헤드 ×111.1, RAILGUN 탄속 12,500·관통 200, GOLDEN GUN 몸통 ×10</td></tr>
-      </tbody></table></div></article>
+  <article class="e"><h3>특수·시험용까지 포함한 극단값<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>항목</th><th>첨부 데이터 기준</th></tr></thead><tbody><tr><td>기본 걷기 17.5</td><td>BRASS KNUCKLE, UCHIWA, BARE FISTS, SPARKLER; 기본 달리기 배율 적용 시26.25</td></tr><tr><td>느린 걷기</td><td>JUGGUN 6. KORD-R·NTW-20·STOPPER와 일부 근접무기는10</td></tr><tr><td>큰 탄창</td><td>JUGGUN 500, HORNET 271, ChainSAW 200, MGV-176 161</td></tr><tr><td>예비탄</td><td>JUGGUN은 무한대 설정, MGV-176은322</td></tr><tr><td>장착 목록 최대</td><td>M82A1 157개. 같은 파츠라도 다른 칸이면 각각 셈</td></tr><tr><td>장착 목록 최소</td><td>GOLDEN GUN 0, ROPOD SHOTTY 2, GOLDEN ZIP 22 26, ChainSAW 32</td></tr><tr><td>조준경 목록100개</td><td>HENRY 45-70, FT300, TRG-42, M1903, M82A1</td></tr><tr><td>탄약 목록 최대</td><td>GOLDEN HK51B 14개. SAIGA SAR·SA58 SPR·MP7·THUMPER·KRISS VECTOR는8개</td></tr><tr><td>특이 수치</td><td>ROPOD SHOTTY 헤드 ×250, KEK-50 헤드 ×111.1, RAILGUN 탄속12,500·관통200, GOLDEN GUN 몸통 ×10</td></tr></tbody></table></div><p>일반 공개 서버에서 쓸 수 있는 무기만 추린 순위가 아니에요. 잠금·시험 권한·이벤트 전용 여부는 별도로 확인해야 해요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase / 세트 순서와 무기 전용 modifier까지 적용한 기본 장착 목록</p></details></article>
 
-  <article class="e"><h3>AN-94와 별난 발사 방식</h3>
-    <ul>
-      <li>AN-94는 연사 모드에서 처음 2발만 1800RPM, 그다음 600RPM이에요. 반동이 1/30초 늦게 적용돼서 두 번째 탄이 첫 발 반동 전에 나가요.</li>
-      <li>글록 스위치는 한 번 당기면 999발 연사가 잡히고 버스트 잠금까지 걸려서 탄창이 빌 때까지 쏴요.</li>
-      <li>AF2011-A1은 2발, 내부명 M7644는 4발이 가로로 나란히 동시에 나가요. M7644의 설명은 "HORROR." 한 단어예요.</li>
-      <li>연사 속도는 파츠 적용 후 발사 애니메이션 시간으로 상한이 걸려요. 펌프·볼트 총은 머즐 부스터가 덜 들어갈 수 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>AN-94·초고속 점사·바이너리<span class="b fix">정정</span></h3><ul><li>AN-94는 연사 모드에서 첫 두 발의 간격을1800RPM으로 처리하고 이후600RPM으로 전환해요. recoil delay는1/30초예요. 같은 시간 경계의 프레임 처리·남은 반동까지 있으므로 “두 발이 정확히 같은 좌표”를 보장하지는 않아요.</li><li>Glock Switch는999발 점사와 burst lock을 설정해 버튼을 놓아도 점사가 이어지는 구조예요. 탄 고갈·무기 상태 전환 등 중단 조건은 남아 있어요.</li><li>AF2011-A1과 M7644는 각각2발·4발 점사를999,000RPM으로 처리해요. 별도의 여러 총구에서 엄밀히 동시에 쏘는 구현이라는 뜻은 아니에요. 가로 퍼짐 편향도 있어요. M7644 설명에는 “HORROR.” 뒤로 네 총열 개조에 관한 문장이 더 있어요.</li><li>BINARY 모드는 누를 때와 놓을 때의 입력을 모두 활용해요. 일반 연사와 구분해야 해요.</li><li>파츠 합성 경로에는 발사·재장전 동작 시간으로 firerate 상한을 잡는 처리도 있어요. 파츠의 명목 연사 배율이 최종 RPM에 그대로 남지 않을 수 있어요.</li></ul><details class="note"><summary>코드 근거</summary><p>FirearmObject: getFirerate·shoot·fireRound / AN-94·AF2011-A1·M7644·FIVE-0 / Glock Switch / ContentUtils: compileWeaponData</p></details></article>
 </section>
 
 <section id="parts" data-t="g">
-  <header><h2>공통 파츠 메모</h2><p>처음 검증한 공통 파츠 도감에서 나온 내용이에요.</p></header>
+  <header><h2>공통 파츠 메모</h2><p>공통 파츠, 장착 세트, 총기별 수정이 합쳐지는 방식을 확인했어요.</p></header>
 
-  <article class="e"><h3>공통 파츠가 붙는 총은 237종이에요</h3>
-    <p>전체 287종 중 권총 34, 리볼버 8, 기관권총 6, PDW 1, 기타 1의 50종에는 공통 장착 목록이 없어요. 237종 안에서도 빠지는 총이 있어요.</p>
-    <ul>
-      <li>머플러·오일 필터는 49종에서 못 달아요(저격총 18, 산탄총 8 등).</li>
-      <li>머즐 부스터는 47종, 소음기는 약 20종, 그립은 22종에서 못 달아요.</li>
-      <li>2단 반동이 있는 총 비율은 카메라 수직 74%, 카메라 좌우 33%, 총 수직 12%, 총 좌우 4%예요. 2층 효과는 이 총들에서만 작동해요.</li>
-      <li>관성 흔들림 전용 배율은 16종, 레이더 표시 시간은 44종에만 있어서 그 효과도 그 총에서만 작동해요.</li>
-    </ul></article>
+  <article class="e"><h3>공통 세트와 효과가 적용되는 필드<span class="b fix">정정</span></h3><p>총기292종 중 SetAll을 장착 세트 순서에 포함한 총은 <b>242종</b>이에요. 최종 목록은 뒤에 오는 세트와 무기별 수정에 따라 달라져요. 전체292종의 합성 목록에서 Muffler는229종, Oil Filter는228종, Muzzle Booster는237종에 있어요.</p><div class="scroll"><table><thead><tr><th>원본 recoil에 두 번째 층이 있는 항목</th><th>총기 수 /292</th></tr></thead><tbody><tr><td>조준 카메라 body 수직(x)</td><td>189 (64.7%)</td></tr><tr><td>조준 카메라 body 좌우(y)</td><td>87 (29.8%)</td></tr><tr><td>조준 총 회전 수직(x)</td><td>42 (14.4%)</td></tr><tr><td>조준 총 회전 좌우(y)</td><td>14 (4.8%)</td></tr></tbody></table></div><p>aimswingmod 필드는18종, pinglife 필드는48종에 있어요. 기존 필드에 곱하는 modifier는 대상이 없으면 건너뛰지만 setters·adders가 필드를 만들 수 있어요. 따라서 원본 필드 개수만으로 “나머지 총에는 어떤 조합에서도 무효”라고 하면 안 돼요. 두 번째 층의 존재 역시 실제 반동값이0이 아닌 것과는 달라요.</p><details class="note"><summary>코드 근거</summary><p>AttachmentDataSets·Sets·SetFunctions / WeaponDatabase / StatModifierUtils</p></details></article>
 
-  <article class="e"><h3>레이저 해금 킬은 칸마다 달라요</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>파츠</th><th class="n">언더배럴 칸</th><th class="n">기타 칸</th></tr></thead>
-      <tbody>
-        <tr><td>Red Laser</td><td class="n">75</td><td class="n">20</td></tr>
-        <tr><td>Green Laser</td><td class="n">165</td><td class="n">110</td></tr>
-        <tr><td>Blue Laser</td><td class="n">255</td><td class="n">200</td></tr>
-        <tr><td>Yellow Laser</td><td class="n">450</td><td class="n">450</td></tr>
-        <tr><td>Tri Laser</td><td class="n">1,070</td><td class="n">1,015</td></tr>
-        <tr><td>Flashlight</td><td class="n">0</td><td class="n">0</td></tr>
-      </tbody></table></div>
-    <p class="note">대부분의 총 기준이에요. 몇몇 총은 칸별 해금 킬을 따로 정해 둬요. 기타 칸은 개머리판 칸이기도 해서, 레이저를 달면 개머리판을 포기해야 해요.</p></article>
+  <article class="e"><h3>레이저 해금 킬은 장착 칸마다 달라요<span class="b est">범위 제한</span></h3><div class="scroll"><table><thead><tr><th>파츠</th><th>Underbarrel</th><th>Other</th></tr></thead><tbody><tr><td>Red Laser (내부 Laser)</td><td>75</td><td>20</td></tr><tr><td>Green Laser</td><td>165</td><td>110</td></tr><tr><td>Blue Laser</td><td>255</td><td>200</td></tr><tr><td>Yellow Laser</td><td>450</td><td>450</td></tr><tr><td>Tri Laser</td><td>1070</td><td>1015</td></tr><tr><td>Flashlight</td><td>0</td><td>0</td></tr></tbody></table></div><p>많이 쓰이는 기본값이에요. Green Laser 언더배럴205킬, Flashlight120·365킬 같은 무기별 예외가 있어요. Other의 레이저·개머리판이 같은 칸을 쓰는 총은 둘을 동시에 고를 수 없어요.</p><details class="note"><summary>코드 근거</summary><p>합성 장착 목록의 unlockkills / 각 AttachmentData</p></details></article>
 
-  <article class="e"><h3>파츠별 숨은 효과</h3>
-    <ul>
-      <li><b>Tri Laser:</b> 연사할수록 지향사격 퍼짐이 덜 커져요. AWS, DSR-50, NTW-20, HORNET, JUGGUN은 기본 탄 퍼짐이 크로스헤어 크기로 정해져서, 조준 사격 퍼짐까지 20% 줄어요.</li>
-      <li><b>PKA-S:</b> 조준 중 이동 배율을 0.5로 덮어써요. 대부분 총은 느려지지만 원래 0.5인 18종은 그대로, NTW-20·0.4인 7종·MG3KWS는 오히려 빨라져요.</li>
-      <li><b>FF 3x NV:</b> 스코프 흔들림 크기와 속도가 0이에요. 그립의 스코프 흔들림 감소가 의미 없어요.</li>
-      <li><b>Halbek Device:</b> 카메라 수직 ×−0.7로 아래로 뒤집히고, 좌우 ×−0.75, 기울기 ×−1.4, 총 수직 랜덤 ×0.1이에요.</li>
-      <li><b>Chainsaw Grip:</b> 우선순위 2로 조준경 대신 그립 조준점(배율 0.9)을 쓰고, 레드닷·스코프 등급이 꺼져 아이언 등급이 돼요. 보조 조준도 막혀요.</li>
-      <li><b>Sideways Grip:</b> T키 보조 조준이 생겨요(배율 1.3, 조준 속도 12).</li>
-      <li><b>미디엄 소음기(PBS-4):</b> 데미지 거리가 모든 지점에서 8.5% 늘어나요.</li>
-      <li><b>레이더:</b> 머플러는 총구 화염만 숨기고 레이더는 못 숨겨요. 플래시 하이더는 60스터드, 오일 필터는 5스터드 밖 적에게 숨겨요. 탄도 계산기는 소음 파츠와 같이 쓰면 그 거리가 30스터드 늘어요.</li>
-      <li><b>조준경 등급</b>은 지금 쓰는 조준 기준이라, 캔티드 같은 보조 조준으로 바꾸면 그쪽 등급이 적용돼요.</li>
-    </ul></article>
+  <article class="e"><h3>파츠별 효과와 적용 조건<span class="b fix">정정</span></h3><ul><li><b>Tri Laser:</b> 공통 relative 값은 hipfirestability +0.15, crosssize −0.25, crossexpansion −0.5예요. 한 개의 crosssize 효과는×0.8이에요. 고유 퍼짐은 variablechoke → spread → crosssize 기반 aimchoke 순으로 분기해요. 원본에서 마지막 식을 쓰는 총은 HORNET·JUGGUN·LA RATA이며, 실제 장착 가능·다른 파츠 변경까지 확인해야 해요. AWS·DSR-50·NTW-20에 무조건 조준 퍼짐−20%라는 설명은 제외했어요.</li><li><b>PKA-S:</b> aimspeed가 아니라 aimwalkspeed 배율을0.5로 설정해요. 원래 값에 따라 빨라지거나 느려지고, 더 높은 우선순위 설정이 덮을 수 있어요.</li><li><b>FF 3x NV:</b> 스코프 swayspeed·swayamp를0으로 설정해요. 모든 종류의 관성·걷기·반동까지 없애는 것은 아니에요. breathspeed0.001은 게이지 기준 약16.67초예요.</li><li><b>Halbek Device:</b> 조준 카메라 body 첫 층 x·y·z의 쏠림·랜덤에 각각−0.7·−0.75·−1.4를 곱해요. 지향사격 쪽 값은 다르고, 총 회전 첫 층 수직 랜덤×0.1도 있어요. 대칭 랜덤 폭의 음수는 쏠림 방향 반전과 같은 의미가 아니에요.</li><li><b>Chainsaw Grip:</b> 일부 설정 priority2로 배율0.9의 전용 조준점을 사용하고 blackscope·midscope를 해제하며 보조 조준을 막아요.</li><li><b>Sideways Grip:</b> 배율1.3·aimspeed12의 보조 조준 데이터를 추가해요.</li><li><b>Medium Suppressor (PBS-4):</b> damageGraph의1~6번 점 거리를×1.085로 바꿔요. 첨부 기본 총기 그래프는 모두6점 이하여서 전 지점에 해당해요.</li><li><b>레이더:</b> Muffler 자체는 hideminimap을 주지 않아요. Flash Hider는60스터드, Oil Filter는5스터드 밖 관찰자에 대한 숨김 값을 설정해요. Ballistics Tracker는 숨김 거리에30을 더하지만 스스로 숨김을 켜지는 않아요. pinglife ×1.3은 그 필드가 있을 때 적용돼요.</li></ul><details class="note"><summary>코드 근거</summary><p>각 파츠 AttachmentData / FirearmObject: fireRound / ContentUtils·StatModifierUtils / HudRadarInterface</p></details></article>
 
-  <article class="e"><h3>반동 회복 대기 시간의 예외</h3>
-    <p>대부분 0.1초지만 카메라 반동 회복은 11종이 0.15초, 몇 종은 0.3~0.4초, 한 종은 5초예요. 총 반동 회복은 2종이 0.03초예요.</p></article>
+  <article class="e"><h3>반동 회복 대기 시간의 예외<span class="b fix">정정</span></h3><p>아래는 원본 recoil의 <b>aimCameraBodyRecovery.x.delay</b>를 비교한 값이에요. 반동 회복 전체를 하나의 지연값으로 대표하면 안 돼요.</p><div class="scroll"><table><thead><tr><th>delay</th><th>해당 무기</th></tr></thead><tbody><tr><td>0.1초</td><td>268종</td></tr><tr><td>0.15초</td><td>11종</td></tr><tr><td>0.07초 /0.12초</td><td>M16A4 / BEOWULF TCR</td></tr><tr><td>0.3초</td><td>sfg 50, COBRAY TERMINATOR, BFG 50, VKS, M82A1</td></tr><tr><td>0.05초 /5초</td><td>FIVE-0 / COLT SMG 635</td></tr><tr><td>0.4초</td><td>INTERVENTION, TIMBERWOLF</td></tr><tr><td>0.2초</td><td>KEK-50, THE FIX</td></tr></tbody></table></div><p>aimRotationRecovery.x.delay는 USC·UMP45만0.03초이고 나머지290종은0.1초예요. delay 이전에도 스프링 복원은 진행돼요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase 292종 recoil 필드 / RecoilSprings: step</p></details></article>
 
-  <article class="e"><h3>총마다 다른 파츠 효과는 드물어요</h3>
-    <p>공통 파츠 수치는 대부분의 총에 그대로 맞아요. 성능까지 바뀌는 총별 설정은 그립은 I MP-9 한 종(Vertical Grip 조작 +10%, 총 반동 쏠림 ×1.15, 감쇠 ×0.9), SAP는 14종 중 9종, 기타 칸 레이저는 일부 권총과 1858 CARBINE(크로스헤어 벌어짐 ×0.29) 정도예요. 나머지 총별 설정은 대부분 팔 위치 같은 외형이에요.</p></article>
+  <article class="e"><h3>공통 설명보다 최종 합성값을 확인해야 해요<span class="b fix">정정</span></h3><p>파츠 기본 데이터에 세트·무기별 modifier가 더해져요. 외형뿐 아니라 반동·탄창·데미지·해금 킬도 바꿀 수 있으므로 “무기별 성능 차이는 거의 없다”는 단정은 제외했어요.</p><ul><li>AK-12의 Super Armor Piercing 전용 modifier는 damageGraph 마지막 점 피해까지 바꿔요.</li><li>Marksman Kit처럼 같은 표시 이름으로 전혀 다른 내부 파츠가 있는 경우도 있어요. Straight Pull Bolt와 FT300 Extended Magazine이 그 예예요.</li><li>setters는 우선순위로 하나가 정해지고, 상대·직접 배율은 각각 누적 규칙을 적용해요. 장착 UI의 이름만으로 모든 무기에 같은 효과라고 판단하면 안 돼요.</li></ul><details class="note"><summary>코드 근거</summary><p>각 총기 attachmentModifiers / Sets / SetFunctions / ContentUtils: compileWeaponData</p></details></article>
+
+<article class="e"><h3>같은 이름의 파츠도 슬롯·무기 기준으로 비교해요<span class="b fix">추가</span></h3><p>기본 장착 목록은 attachmentSetOrder 순서로 표를 합친 뒤 각 세트의 수정과 총 전용 attachmentModifiers를 적용해 만들어요. 이때 remove, modifyall, modifyallexcept, modifylist 같은 연산이 목록과 수치를 바꿔요.</p><p>이 문서의 “장착 파츠 수”는 칸별 항목 수의 합이에요. 동일 Laser가 두 칸에 있으면2개로 세고, “등장 총기 수”에서는 한 총을1번만 세었어요. 잠금 조건을 통과해 현재 쓸 수 있는지와는 별개예요.</p><details class="note"><summary>코드 근거</summary><p>SetFunctions / ContentUtils / AttachmentDataSets·Sets</p></details></article>
 </section>
 
 <section id="economy" data-t="g">
   <header><h2>경제와 성장</h2><p>크레딧, 경험치, 케이스의 실제 공식이에요.</p></header>
 
-  <article class="e"><h3>랭크와 가격</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>항목</th><th>공식</th></tr></thead>
-      <tbody>
-        <tr><td>랭크 r까지 필요한 XP</td><td>500 × r × (r + 1), 랭크 100이면 505만</td></tr>
-        <tr><td>랭크업 보상</td><td>200 + 5r 크레딧</td></tr>
-        <tr><td>총 미리 사기</td><td>(1000 + 200 × 남은 랭크) × 0.7</td></tr>
-        <tr><td>파츠 미리 사기</td><td>(200 + 남은 킬) × 0.7, 킬을 쌓을수록 싸져요</td></tr>
-        <tr><td>로블록스 Premium</td><td>총·파츠 10% 할인</td></tr>
-        <tr><td>이름 태그</td><td>70,000 크레딧</td></tr>
-        <tr><td>조준점 색 변경</td><td>그 총 200킬</td></tr>
-      </tbody></table></div>
-    <p>랭크 1에서 KORD-R(랭크 362)을 사면 약 51,000 크레딧이에요. 로딩 팁에 따르면 데미지 50 이상을 넣은 어시스트도 파츠 해금 킬로 인정되고, 저격총 5,000킬이면 모든 저격 스코프가 열려요.</p></article>
+  <article class="e"><h3>랭크와 기본 가격 공식<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>항목</th><th>첨부 공유 코드</th></tr></thead><tbody><tr><td>랭크r 누적 XP</td><td>500 ×r×(r+1). 랭크100은5,050,000XP</td></tr><tr><td>랭크r에 도달한 보상</td><td>200+5r 크레딧</td></tr><tr><td>총 미리 구매</td><td>ceil((1000+200×남은 랭크)×0.7×Premium 계수)</td></tr><tr><td>파츠 미리 구매</td><td>ceil((200+남은 킬)×0.7×Premium 계수)</td></tr><tr><td>Premium 계수</td><td>해당 여부에 따라0.9 또는1</td></tr><tr><td>이름 태그</td><td>70,000크레딧</td></tr><tr><td>조준점 색 변경</td><td>해당 총의 해당 조준 파츠 기록200킬, Studio는0</td></tr></tbody></table></div><p>별도 할인 없이 랭크1에서 랭크362 KORD-R의 기본 선구매 가격은51,240크레딧이에요. 로딩 팁은 회복되지 않은 피해 <b>50 초과</b>의 어시스트를 해금 킬로 인정한다고 설명해요. 저격총5,000킬 스코프 해금도 <b>그 총</b>에 관한 설명이지 모든 저격총의 스코프가 일괄 해금된다는 뜻은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>PlayerDataUtils·ActiveLoadoutUtils·DisplayAttachmentEditSightColor / Tips</p></details></article>
 
-  <article class="e"><h3>케이스 확률과 천장</h3>
-    <p>기본 확률은 커먼 60, 언커먼 26, 레어 10, 베리 레어 3, 레전더리 1%예요. 베리 레어 미만이 나올 때마다 카운터가 1 올라서 레전더리 +0.25%, 베리 레어 +0.5%가 붙고, 베리 레어 이상이 나오면 초기화돼요.</p>
-    <ul>
-      <li>실효 확률은 레전더리 약 2.75%, 베리 레어 약 6.5%예요. 베리 레어 이상은 평균 10.8회마다 나와요.</li>
-      <li>레전더리는 근접무기를 고르는데, 미보유 근접무기를 최대 ⌈N^0.75⌉번까지 다시 뽑아요.</li>
-      <li>케이스 열 때 도는 연출 룰렛은 확률 합이 100이라 레전더리가 절대 안 나와요.</li>
-      <li>열쇠 값은 항상 케이스의 2배예요.</li>
-    </ul></article>
+  <article class="e"><h3>케이스 확률 보정은 케이스마다 따로 쌓여요<span class="b fix">정정</span></h3><p>카운터k일 때 등급1~5 확률은 <b>60−0.5k, 26−0.25k, 10, 3+0.5k, 1+0.25k(%)</b>예요. 카운터는 케이스 이름별로 보관하고, 등급1~3이면+1, Very Rare·Legendary면0으로 돌아가요.</p><ul><li>같은 케이스를 계속 열며 이 규칙만 적용한다고 계산한 장기 비율은 Legendary 약2.748%, Very Rare 약6.496%예요. 둘 중 하나가 나오는 평균 간격은 약10.818회예요. 첫 개봉의 확률과는 달라요.</li><li>Very Rare도 카운터를 초기화하므로 Legendary를 일정 횟수 안에 보장하는 천장이 아니에요.</li><li>Legendary 무기는 허용 목록 크기N에 대해 최대⌈N^0.75⌉회 <b>총 추첨</b>해 미보유가 나오면 멈춰요. “첫 추첨 후 그만큼 재추첨”이 아니고, 중복을 완전히 막지도 않아요.</li><li>연출용 무작위 채움 풀은61·26·10·3·0이지만 등급을 직접 지정하는 인자가 있고 실제 결과는 별도로 받아요. 이것만으로 룰렛에서 Legendary를 절대 표시할 수 없다고 하면 안 돼요.</li><li>첨부 CaseDatabase의 열쇠 크레딧 가격은 케이스 가격의2배예요.</li></ul><details class="note"><summary>코드 근거</summary><p>SkinCaseUtils: getRates·getRealRollResult·pickLegendaryWeapon·getSimulatedRollResult / PlayerDataUtils: getPityData / CaseDatabase</p></details></article>
 
-  <article class="e"><h3>스킨 6개 교환은 실패가 없어요</h3>
-    <p>등급과 케이스 티어가 같은 스킨 6개를 넣으면 한 등급 위 스킨 1개가 확정이에요. 베리 레어 6개면 레전더리 확정이에요. 결과 케이스는 넣은 6개 중 하나를 무작위로 골라 정해서, 원하는 케이스 스킨을 많이 섞을수록 유리해요.</p></article>
+  <article class="e"><h3>스킨 6개 교환의 조건과 결과<span class="b fix">정정</span></h3><p>같은 스킨 등급·케이스 티어의 교환 가능한 일반 무기 스킨6개를 요구해요. 결과 케이스는 투입한6개 중 한 항목에서 골라서, 같은 케이스를 많이 넣으면 그 비중만큼 선택 확률이 커져요.</p><p>일반적으로 한 등급 위를 뽑고, Very Rare6개는 Legendary 무기 결과로 이어져요. 이때 무기에 붙는 스킨 자체는1~4등급에서 다시 고르는 구조예요. “Legendary 무기”와 CamoDatabase의 스킨 Rarity를 구분해야 해요. 입력 검증·서버 승인까지 생략되는 기능은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>SkinCaseUtils: tradeInRequirement·rollTrade·getRealRollResult / 인벤토리 교환 UI</p></details></article>
 
-  <article class="e"><h3>스킨 판매가와 기대 수익</h3>
-    <p>판매가 = 등급² × 250 × (500 + 열쇠 가격) ÷ 5000</p>
-    <div class="scroll"><table>
-      <thead><tr><th>등급</th><th class="n">Pacific 판매가</th><th class="n">직접 구매가</th></tr></thead>
-      <tbody>
-        <tr><td>커먼</td><td class="n">40</td><td class="n">450</td></tr>
-        <tr><td>언커먼</td><td class="n">160</td><td class="n">563</td></tr>
-        <tr><td>레어</td><td class="n">360</td><td class="n">1,125</td></tr>
-        <tr><td>베리 레어</td><td class="n">640</td><td class="n">2,250</td></tr>
-        <tr><td>레전더리</td><td class="n">1,000</td><td class="n">4,500</td></tr>
-      </tbody></table></div>
-    <p>케이스를 까서 바로 팔면 평균 37%(450 중 166)만 돌아와요. 티어 4 케이스는 31%예요. 직접 구매가는 프리셋을 통해 스킨을 사는 가격으로, (케이스 + 열쇠) × 1·1.25·2.5·5·10이에요. 특정 스킨을 원하면 직접 구매가 훨씬 싸요.</p></article>
+  <article class="e"><h3>스킨 판매가와 개봉 기대값<span class="b est">계산</span></h3><p>판매가는 <b>floor(등급²×250×(500+열쇠 크레딧 가격)/5000)</b>예요. 근접무기 스킨은 판매용 등급을5로 취급해요. 구매 기준가는 floor(케이스+열쇠 가격)에 등급별1·1.25·2.5·5·10을 곱해요.</p><div class="scroll"><table><thead><tr><th>등급</th><th>Pacific 판매가</th><th>구매 기준가</th></tr></thead><tbody><tr><td>1</td><td>40</td><td>450</td></tr><tr><td>2</td><td>160</td><td>562.5</td></tr><tr><td>3</td><td>360</td><td>1125</td></tr><tr><td>4</td><td>640</td><td>2250</td></tr><tr><td>5</td><td>1000</td><td>4500</td></tr></tbody></table></div><p>Pacific을 케이스150+열쇠300으로 매번 구매하고 바로 판매한다고 놓으면, 장기 확률 보정 기준 평균 판매액은 약166.46크레딧, 차액은 약−283.54크레딧이에요. 첫 카운터0의 평균 판매액은130.8크레딧이에요. 무료 드롭·교환·보유 케이스 가치·개별 할인은 제외한 계산이에요. 실제 상품 최종가는 Blueprint 가격 합성·반올림 경로를 더 거쳐요.</p><details class="note"><summary>코드 근거</summary><p>SkinCaseUtils: getSkinCost·getPurchaseSkinPrice·getRealRollResult / Pacific CaseDatabase / 장기 상태 확률 계산</p></details></article>
 
-  <article class="e"><h3>일일 상점</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>판매 가격</th><th class="n">일반 품목</th><th class="n">추천 품목</th></tr></thead>
-      <tbody>
-        <tr><td>정가</td><td class="n">11.5%</td><td class="n">없음 (최소 15% 할인)</td></tr>
-        <tr><td>50% 이하</td><td class="n">약 3.6%</td><td class="n">약 6.5%</td></tr>
-        <tr><td>1% (99% 할인)</td><td class="n">약 0.11%</td><td class="n">약 0.04%</td></tr>
-      </tbody></table></div>
-    <p>새로고침은 처음 3번 50, 다음 10번 100, 그 후 250 크레딧이에요.</p></article>
+  <article class="e"><h3>일일 상점 할인 추첨과 새로고침<span class="b fix">정정</span></h3><p>일반 상품 가격 배율은1.00~0.01의 가중치 추첨이에요. 일반 표의 총 가중치는4.355로, 정가일 확률 약11.48%, 반값 이하 약3.56%, 99% 할인 약0.115%예요. Featured 표는 최저15% 할인부터 시작하며 반값 이하 약6.42%, 99% 할인 약0.0425%예요.</p><p>이 비율은 해당 추첨표를 쓰는 상품 한 번의 배율 선택 기준이에요. 고정 priceMultiplier를 가진 프리셋이나 상품 생성 조건은 별도예요. 새로고침 비용은 첫3회50, 다음10회100, 이후250크레딧 구간을 사용해요.</p><details class="note"><summary>코드 근거</summary><p>PlayerShopConfig / BlueprintInterface: chooseRandomPriceMultiplier / PlayerShopUtils의 상점 갱신 가격 계산</p></details></article>
 
-  <article class="e"><h3>프리셋(블루프린트)</h3>
-    <ul>
-      <li>공식 프리셋은 개발자 10개, 커뮤니티 714개, 스타터 29개예요. 스타터 팩은 정가의 20~60%예요.</li>
-      <li>프리셋 가격 = (미보유 총·파츠 + 미보유 스킨 + 슬롯) × 할인율이에요.</li>
-      <li>슬롯은 총마다 첫 개 무료, 그다음 25·50·100·150·200·250 크레딧, 최대 25개예요.</li>
-      <li>커뮤니티 프리셋 인기 1위는 Delta Sight, Muzzle Brake, Angled Grip, Blue Laser, Armor Piercing이에요. 753개 중 122개는 파츠 없이 스킨만 바꾼 거예요.</li>
-    </ul></article>
+  <article class="e"><h3>프리셋 753개와 저장 슬롯<span class="b fix">정정</span></h3><p>첨부 프리셋은 개발자10·커뮤니티715·스타터28개로 총753개예요. 장착 파츠가 모두 빈 프리셋은122개예요. 파츠 출현 상위는 Angled Grip130, Blue Laser98, Muzzle Brake93, Green Laser78, Delta Sight78회예요.</p><ul><li>무기별 저장 슬롯 한도는25개예요. 첫 슬롯은 무료이고 이후 구매 단계는25·50·100·150·200·250크레딧, 그 뒤는250이에요.</li><li>상품 가격은 미보유 무기·파츠와 필요한 미보유 스킨 값을 합하고, 조건부 슬롯 비용과 상품 배율을 적용해 반올림해요. 스킨 이름 중복도 정리해요.</li><li>상품에 붙는 할인 슬롯 비용100은 편집 가능한 프리셋·기존 슬롯 보유·한도 미만 등의 조건을 확인해요. 모든 구매에 항상100을 더하는 것은 아니에요.</li></ul><details class="note"><summary>코드 근거</summary><p>WeaponBlueprints 전체753개 / PlayerShopConfig / PlayerShopUtils의 blueprint 슬롯·가격 함수</p></details></article>
 
-  <article class="e"><h3>일일 도전과제</h3>
-    <p>3칸, 하루 무료 새로고침 3번, 킬 목표는 50·100·150·250 중에서 정해져요. 종류는 점령, 도그태그, 전체 완료, 총기 킬, 수류탄 킬, 보너스 킬, 근접 킬, 총기 분류별 킬 8가지예요.</p></article>
+  <article class="e"><h3>일일 도전은 종류마다 목표량이 달라요<span class="b fix">정정</span></h3><p>설정은 도전 슬롯3개, 무료 초기화3회, 난도4단계예요. 무기 분류별 처치·특정 총 처치·수류탄·근접·태그 수집·점령·보너스 처치 등의 처리가 있어요. CompleteAll은 전체 완료를 처리하는 별도 모듈이에요.</p><p>50·100·150·250킬 표는 WeaponClassKills 설정에 속하고, 그 추첨 항목은 allowedTiers1·2예요. 이를 모든 도전의 네 난도 공통 처치 목표라고 설명하면 틀려요. 실제 추첨 목록은 허용 난도와 가중치를 함께 봐요.</p><details class="note"><summary>코드 근거</summary><p>DailyChallengeConfig·DailyChallengeUtils / ClientModules/DailyChallenges/ChallengeTypes</p></details></article>
+
+<article class="e"><h3>확률표는 첫 개봉과 장기 평균을 나눠 봐야 해요<span class="b est">계산</span></h3><div class="scroll"><table><thead><tr><th>상황</th><th>Common</th><th>Uncommon</th><th>Rare</th><th>Very Rare</th><th>Legendary</th></tr></thead><tbody><tr><td>카운터0</td><td>60%</td><td>26%</td><td>10%</td><td>3%</td><td>1%</td></tr><tr><td>같은 케이스 장기 반복</td><td>약56.504%</td><td>약24.252%</td><td>10%</td><td>약6.496%</td><td>약2.748%</td></tr></tbody></table></div><p>장기 평균은 카운터k에 도달할 확률을 생존확률의 곱으로 구한 뒤, 주기 내 예상 방문 횟수로 가중한 값이에요. 계정 여러 개의 카운터나 서로 다른 케이스를 합쳐 하나의 연속 카운터로 계산하지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>SkinCaseUtils의 전이 규칙을 이용한 재생 주기 계산</p></details></article>
 </section>
 
 <section id="systems" data-t="p">
   <header><h2>서버와 시스템</h2><p>서버 종류, 운영 도구, 네트워크와 모바일 기능이에요.</p></header>
 
-  <article class="e"><h3>서버 종류 14개</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>서버</th><th>표시명</th><th>저장</th><th>매칭</th><th>특징</th></tr></thead>
-      <tbody>
-        <tr><td>Production</td><td>PROD</td><td>O</td><td>−</td><td>기본 공개 서버</td></tr>
-        <tr><td>Matchmaking</td><td>MM</td><td>O</td><td>실력 + 핑</td><td>유일한 실력 기반 매칭</td></tr>
-        <tr><td>StandardReserved</td><td>RES</td><td>O</td><td>채우기 + 무작위 + 핑</td><td>예약 일반 서버</td></tr>
-        <tr><td>Party</td><td>PARTY</td><td>O</td><td>채우기 + 무작위 + 핑</td><td>최대 24명</td></tr>
-        <tr><td>Mobile</td><td>MOBILE</td><td>O</td><td>채우기 + 무작위 + 핑</td><td>떨어진 무기 고화질 기본 꺼짐</td></tr>
-        <tr><td>Console</td><td>CON</td><td>O</td><td>−</td><td>컨트롤러만 쓰는 사람은 히트박스 반경 0.5 (기본 0.1)</td></tr>
-        <tr><td>Onboarding</td><td>OB</td><td>O</td><td>채우기 + 무작위 + 핑</td><td>신규 유저 보호 서버, 건너뛰기 버튼</td></tr>
-        <tr><td>Adrenaline</td><td>ADHD</td><td>O</td><td>채우기 + 무작위 + 핑</td><td>전용 이동 설정이 있지만 클라이언트에서 미사용</td></tr>
-        <tr><td>Quarantine</td><td>QT</td><td>O</td><td>채우기 + 무작위 + 핑</td><td>이름상 격리 서버 <span class="b est">추정</span></td></tr>
-        <tr><td>VIP</td><td>VIP</td><td>X</td><td>채우기 + 핑</td><td>개인 서버</td></tr>
-        <tr><td>Banland</td><td>BL</td><td>X</td><td>채우기 + 핑</td><td>투표 강퇴 꺼짐, 제재 서버 <span class="b est">추정</span></td></tr>
-        <tr><td>TestPlace</td><td>TEST</td><td>X</td><td>−</td><td>테스트 무기 무료</td></tr>
-        <tr><td>localTest</td><td>local</td><td>X</td><td>−</td><td>개발자 로컬</td></tr>
-        <tr><td>Default</td><td>!!!</td><td>X</td><td>−</td><td>서버 종류를 못 정했을 때</td></tr>
-      </tbody></table></div>
-    <p>매칭 방식은 실력(8) + 채우기(4) + 무작위(2) + 핑(1) 비트를 더한 숫자로 저장돼요. 투표 강퇴는 Y(찬성), N(반대), J(닫기)로 해요.</p></article>
+  <article class="e"><h3>서버 종류 설정은 14개예요<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>서버</th><th>표시명</th><th>저장</th><th>매칭 비트</th></tr></thead><tbody><tr><td>Default</td><td>!!!</td><td>X</td><td>미지정</td></tr><tr><td>localTest</td><td>local</td><td>X</td><td>미지정</td></tr><tr><td>Production</td><td>PROD</td><td>O</td><td>미지정</td></tr><tr><td>TestPlace</td><td>TEST</td><td>X</td><td>미지정</td></tr><tr><td>Console</td><td>CON</td><td>O</td><td>미지정</td></tr><tr><td>VIP</td><td>VIP</td><td>X</td><td>5</td></tr><tr><td>Banland</td><td>BL</td><td>X</td><td>5</td></tr><tr><td>Matchmaking</td><td>MM</td><td>O</td><td>9</td></tr><tr><td>StandardReserved</td><td>RES</td><td>O</td><td>7</td></tr><tr><td>Onboarding</td><td>OB</td><td>O</td><td>7</td></tr><tr><td>Quarantine</td><td>QT</td><td>O</td><td>7</td></tr><tr><td>Adrenaline</td><td>ADHD</td><td>O</td><td>7</td></tr><tr><td>Party</td><td>PARTY</td><td>O</td><td>7</td></tr><tr><td>Mobile</td><td>MOBILE</td><td>O</td><td>7</td></tr></tbody></table></div><p>비트는 ELO8·채우기4·무작위2·핑1이에요. 따라서9는 ELO+핑,7은 채우기+무작위+핑,5는 채우기+핑이에요. 실제 매칭 알고리즘이나 현재 운영 여부까지 이 표가 증명하지는 않아요. Party의 maxPlayers는24예요.</p><p>canVotekick은 Default·localTest·Banland만 false이고 VIP는 true예요. canReportVotekick은 여기에 VIP도 false예요. Console의 히트박스 선택 조건은 위의 공격자 입력 설명을 함께 봐야 해요.</p><details class="note"><summary>코드 근거</summary><p>InstanceConfig / HitBoxConfig</p></details></article>
 
-  <article class="e"><h3>개인(VIP) 서버</h3>
-    <ul>
-      <li>모든 총과 파츠가 해금된 상태예요. 별도 획득 무기는 실제로 있어야 해요.</li>
-      <li>경험치, 크레딧, 킬 기록이 저장되지 않아요.</li>
-      <li>서버 주인은 로드아웃 화면 체크박스로 특정 무기를 금지할 수 있어요.</li>
-      <li>강제 리스폰이 즉시 돼요. 투표 강퇴 신고는 꺼져 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>VIP의 해금에도 예외가 있어요<span class="b fix">정정</span></h3><ul><li>ownsWeapon은 unlockAll, supertest 권한, exclusiveunlock 보유 조건을 먼저 확인한 뒤 VIP 해금 분기로 가요. 따라서 VIP라고 시험·독점 무기가 무조건 모두 열리지는 않아요. 일반 무기와 파츠에는 VIP 해금 처리가 있어요.</li><li>InstanceConfig에서 VIP는 canSave=false예요. 서버 주인이 무기 차단을 관리하는 UI와 네트워크 처리도 있어요.</li><li>VIP의 강제 리스폰 안내는 일반 서버와 다르게 처리되지만 안내 생략을 서버의 즉시 재생성 보장으로 해석하면 안 돼요.</li><li>VIP의 투표 강퇴는 켜져 있고, 투표 강퇴 신고만 꺼져 있어요.</li></ul><details class="note"><summary>코드 근거</summary><p>PlayerDataUtils: ownsWeapon·파츠 소유 확인 / InstanceConfig / WeaponManagementInterface·ClientWeaponManager / CharacterObject</p></details></article>
 
-  <article class="e"><h3>운영진 도구</h3>
-    <ul>
-      <li><b>lolhi:</b> 서버가 이 이름의 신호를 보내면 총탄과 근접 판정의 히트박스 반경이 실시간으로 바뀌어요.</li>
-      <li><b>무기 블랙리스트:</b> 특정 무기를 실시간으로 막을 수 있어요. 막히면 그 무기로는 출격 버튼이 안 눌려요.</li>
-      <li><b>잠입 모드:</b> 관리자는 가짜 이름으로 플레이하고, 리더보드 랭크는 50~150 사이 무작위로 보여요.</li>
-      <li><b>스트리머 모드:</b> 다른 플레이어 이름이 "Player 번호"로 가려져요.</li>
-      <li><b>게임 안 설문:</b> 메뉴에 객관식·척도·장문 설문 기능이 있고 플레이어 ID가 자동으로 붙어요.</li>
-      <li>동시 재생 사운드는 최대 400개예요. 맵 결합 도형을 메시로 바꿔 불러오는 실험 코드(정점 6만, 삼각형 2만 한도)도 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>운영·관리·진단용 코드<span class="b fix">정정</span></h3><ul><li><b>lolhi:</b> 수신한 값이 클라이언트 탄·근접 판정의 기본 radius 대신 쓰이는 변수를 갱신해요. 사용자가 직접 조절하는 설정이라는 뜻은 아니에요.</li><li>무기 블랙리스트 수신과 출격 제한 UI가 있어요.</li><li>가명 관련 리더보드 처리에는 표시 랭크를50~150 정수로 고르는 코드가 있어요. 스트리머 모드에는 Player 번호로 이름을 가리는 처리도 있어요.</li><li>설문에는 객관식·척도·텍스트 입력이 있어요. 사용자 ID는 inputLabel이 __userid__인 필드에 넣어요. 모든 설문에 자동으로 붙는다고 단정하면 안 돼요.</li><li>SoundTracking은 관리 중인 재생음 수가400을 넘을 때 정리해요. 이 코드의 경고문만으로 Roblox 전체의 최신 사운드 상한을 증명할 수는 없어요.</li><li>ClientMapLoaderAssist에는 결합 도형의 메시 변환을 시도하는 실험 코드가 있고, 정점60,000·삼각형20,000 기준을 검사해요. 실제 운영 사용 여부는 별도예요.</li></ul><details class="note"><summary>코드 근거</summary><p>ReplicationInterface: lolhi 수신 / LeaderboardObject / PageMainMenuDisplayForms / SoundTracking / ClientMapLoaderAssist</p></details></article>
 
-  <article class="e"><h3>메뉴의 FREECAM과 관전</h3>
-    <p>FREECAM은 모든 서버의 기본 메뉴 버튼이에요. 시작하면 살아 있는 모든 플레이어가 들어오는 거리에서 45° 내려다보는 위치에서 시작해요. 분대 목록에서 아군을 고르면 그 사람 시점 관전으로 바뀌어요.</p></article>
+  <article class="e"><h3>FREECAM의 시작 위치는 평균과 분산으로 정해요<span class="b fix">정정</span></h3><p>메뉴 FREECAM 구현은 살아 있는 복제 대상들의 평균 위치를 중심으로 삼고, 중심까지의 거리 제곱 평균의 제곱근에3을 더해 카메라 거리를 잡아요. 내려다보는 각도는45°예요. 대상이 없으면 맵 스폰 지점을 같은 방식으로 사용해요.</p><p>최외곽 대상을 기준으로 화면 경계를 맞추는 계산이 아니어서 “살아 있는 모든 플레이어가 반드시 한 화면에 들어온다”는 원문은 틀렸어요. 분대 목록에서 아군을 선택하는 관전 카메라는 별도 동작이에요. 코드 존재만으로 모든 배포 환경의 메뉴 노출을 보장하지는 않아요.</p><details class="note"><summary>코드 근거</summary><p>PageMainMenuButtonFreecam: getFreeCameraInitCFrame / PageMainMenuButtonSquadList</p></details></article>
 
-  <article class="e"><h3>맵의 낮과 밤</h3>
-    <ul>
-      <li>서버가 라운드마다 조명 시드를 보내요.</li>
-      <li>"DynamicObject" 태그가 붙은 가로등, 소리, 파티클은 시각에 따라 켜지고 꺼져요. 밤이면 전등 재질이 네온으로 바뀌어요.</li>
-      <li>7시 전과 18시 이후에는 노출 보정 +1이 걸리고, 7~10시에 서서히 0으로 돌아와요. 밤에도 너무 어둡지 않게 한 장치예요.</li>
-    </ul></article>
+  <article class="e"><h3>맵 조명과 낮·밤 처리<span class="b fix">정정</span></h3><ul><li>클라이언트는 서버의 조명 시드·맵 조명 데이터를 받아 사용해요. DynamicObject 태그가 붙은 조명·소리·파티클을 시간에 맞춰 조절하는 코드가 있어요.</li><li>Effects.setuplighting에서 맵 조명을 적용하고 ExposureOverride가 없을 때, ClockTime &lt;7 또는 &gt;18이면 노출 보정1이에요. 7&lt;시간&lt;10에서는(10−시간)/3, 나머지는0이에요. 정확히7시인 경계는 이 코드상0이에요.</li><li>맵 조명 적용을 끄는 분기는 노출0.5 등 별도 값을 사용해요. 모든 설정·맵에서 같은 야간 밝기라고 설명하면 안 돼요.</li></ul><details class="note"><summary>코드 근거</summary><p>DayCycleInterface / Effects: setuplighting / 조명 네트워크 수신</p></details></article>
 
-  <article class="e"><h3>네트워크</h3>
-    <ul>
-      <li>다른 플레이어 움직임은 최대 0.15초 앞을 예측해서 그리고, 최대 지연은 1/3초예요.</li>
-      <li>움직임 데이터는 피보나치(제켄도르프) 부호로 압축해서 보내요.</li>
-      <li>네트워크 이벤트 이름에서 파티 단위 서버 이동, 일일 상점, 크레딧 할인 이벤트, 온보딩 건너뛰기 기능이 보여요.</li>
-    </ul></article>
+  <article class="e"><h3>움직임 동기화와 압축<span class="b est">범위 제한</span></h3><p>복제 위치 Smoother에는 최대 예측0.15초와 최대 지연1/3초 설정이 있어요. 보간·외삽에 쓰는 한도이고, 실제 통신 지연이나 모든 상황의 표시 지연을 보장하는 수치는 아니에요.</p><p>이동 데이터 송수신에는 SmoothSender·FibEncoder·FibDecoder 및 buffer 처리가 있어요. 피보나치 기반 정수 부호화와 양자화가 사용돼요. 파티 서버 이동·상점·온보딩 관련 네트워크 이름도 있지만, 이벤트 이름만으로 서버 정책 전체를 복원할 수는 없어요.</p><details class="note"><summary>코드 근거</summary><p>ReplicationObject·ReplicationInterface / MoveInterface / SmoothSender·FibEncoder·FibDecoder / PublicSettings</p></details></article>
 
-  <article class="e"><h3>모바일 조작</h3>
-    <ul>
-      <li>개발자 Lito, Axis, Shay, Smrkndev의 실제 버튼 배치를 불러올 수 있어요.</li>
-      <li>Action Chain으로 버튼 하나에 여러 동작을 연결할 수 있어요.</li>
-      <li>자이로 조준 세부 설정(Hold Gyro, Fix Gyro Rotation, Max Tilt), Single Fire On Release, Swipe-Through, Sprint Tilt가 있어요.</li>
-      <li>Code 버튼으로 배치 전체를 Lua 코드로 직접 고쳐 적용할 수 있어요. 게임에 내장된 Lua 인터프리터로 실행돼요.</li>
-    </ul></article>
+  <article class="e"><h3>모바일 배치 편집기와 조작 설정<span class="b fix">정정</span></h3><ul><li>TouchProfileLito·Axis·Shay·Smrkndev의 이름 붙은 배치 프리셋이 있어요. 실제 사용 이력까지 확인되는 것은 아니에요.</li><li>Action Chain으로 여러 동작을 연결하고 자이로 조준·회전 고정·기울기 범위·버튼 해제 사격·스와이프 관련 설정을 다루는 코드가 있어요.</li><li>Code 편집기는 배치를 Lua 형태로 편집하고 내장 파서·인터프리터로 처리해요. 관리자 전용 도구에서만 이 인터프리터를 쓰는 것은 아니에요.</li><li>InputInterface.isMobile()은 Test 또는 Studio 조건을 통과한 뒤 TouchEnabled를 반환해요. “테스트면 항상 참”은 틀리고, 이 함수 하나만으로 모든 모바일 입력 경로의 지원 여부를 단정할 수도 없어요.</li></ul><details class="note"><summary>코드 근거</summary><p>TouchController·TouchProfiles·ActionChain / LuaParser·LuaInterpreter / InputInterface: isMobile</p></details></article>
 
-  <article class="e"><h3>코드에 있는 게임 모드 9개</h3>
-    <p>Default(섬멸전), KOTH(점령전), HP(하드포인트), DOM(거점), CTF(깃발), TRUN(도그태그), JUG(저거너트, 팀 점수 막대가 저거너트 체력), EXFIL(데이터 탈취, 들면 위치 공개), REC(데이터 상자 회수, 상자를 쏴서 파괴 가능)예요.</p></article>
+  <article class="e"><h3>클라이언트에 구현된 게임 모드 9종<span class="b est">범위 제한</span></h3><div class="scroll"><table><thead><tr><th>이름</th><th>코드에 있는 표시·처리</th></tr></thead><tbody><tr><td>Default</td><td>기본 팀 전투</td></tr><tr><td>KOTH</td><td>점령 지점</td></tr><tr><td>HP</td><td>하드포인트</td></tr><tr><td>DOM</td><td>여러 거점</td></tr><tr><td>CTF</td><td>깃발</td></tr><tr><td>TRUN</td><td>태그</td></tr><tr><td>JUG</td><td>저거너트 체력·팀 표시</td></tr><tr><td>EXFIL</td><td>데이터 운반·위치 표시</td></tr><tr><td>REC</td><td>데이터 상자 회수·파괴 처리</td></tr></tbody></table></div><p>첨부 모듈 종류를 센 값이에요. 현재 공개 서버에서 모두 선택·추첨 가능하다는 뜻은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>ClientModules/RoundSystem의 모드별 모듈</p></details></article>
 </section>
 
 <section id="dormant" data-t="p">
-  <header><h2>잠든 기능과 미완성 흔적</h2><p>코드에는 있지만 꺼져 있거나 호출되지 않는 것들이에요. 함수 2,278개 중 어디서도 부르지 않는 152개를 추려서 확인했어요.</p></header>
+  <header><h2>실험 기능과 코드 흔적</h2><p>정의된 기능과 확인 가능한 호출 경로를 구분했어요. 이름만으로 출시 계획이나 비활성 상태를 단정하지 않았어요.</p></header>
 
-  <article class="e"><h3>리플레이 흔적</h3>
-    <ul>
-      <li>게임 시계(GameClock)에 setReplayOffset이라는 기능이 있어요. 켜면 서버 시간 대신 지정한 녹화 시점부터 시계가 흘러가요. 리플레이 재생용 장치인데, 지금은 어디서도 호출하지 않아요.</li>
-      <li>공용 설정에는 움직임 기록을 5초 동안 보관하는 값(replicationLogTimeWindow = 5)이 있어요. 무엇에 쓰는지는 서버 코드에 있어서 알 수 없어요. <span class="b est">추정</span></li>
-    </ul></article>
+  <article class="e"><h3>리플레이 관련 이름이 남아 있어요<span class="b est">범위 제한</span></h3><p>GameClock.setReplayOffset은 시계의 기준을 재생 오프셋에 맞추는 함수예요. 첨부 소스에서 외부의 직접 호출은 찾지 못했지만, 이것만으로 완성된 리플레이 기능이나 실제 비활성 상태를 확정할 수는 없어요.</p><p>PublicSettings의 replicationLogTimeWindow는5초예요. 이 값의 서버 사용 목적은 서버 실행 코드가 있어야 확인할 수 있어요.</p><details class="note"><summary>코드 근거</summary><p>GameClock: setReplayOffset / PublicSettings / 첨부 소스 내 참조 검색</p></details></article>
 
-  <article class="e"><h3>무기 참(키링) 시스템</h3>
-    <ul>
-      <li>총에 매다는 장식(참)을 실제 물리로 흔드는 CharmPhysics 모듈이 있어요. 질량, 관성, 줄 길이, 공기 저항까지 계산해요.</li>
-      <li>무기 모델 289개에 이미 참을 다는 위치(CharmNode)가 들어가 있어요.</li>
-      <li>시험용 참을 붙이는 코드는 로블록스 스튜디오에서만 작동해요. 킬 카드에는 참을 지우는 코드가 미리 들어가 있어요.</li>
-      <li>출시 준비 중인 꾸미기 기능으로 보여요. <span class="b est">추정</span></li>
-    </ul></article>
+  <article class="e"><h3>무기 참(키링)의 물리와 부착 위치<span class="b fix">정정</span></h3><ul><li>CharmPhysics는 질량·관성·줄 길이·공기 저항 등을 다루는 물리 계산 모듈이에요.</li><li>ProductionContent의 무기 모델 경로에서 CharmNode라는 부착 노드를289개 확인했어요. 플레이 가능한 무기 수와 같은 개념은 아니에요.</li><li>WeaponUtils에는 Studio 조건에서 시험 참을 붙이는 처리, 킬 카드에는 참을 지우는 처리가 있어요.</li><li>데이터와 실험 경로의 존재는 확인되지만 출시 예정일·출시 준비 상태는 첨부 파일로 알 수 없어요.</li></ul><details class="note"><summary>코드 근거</summary><p>CharmPhysics / WeaponUtils / 킬 카드 무기 표시 모듈 / XML 객체 경로 집계</p></details></article>
 
-  <article class="e"><h3>어린이용 피격 화면</h3>
-    <p>피격 시 화면 가장자리의 빨간 효과를 검은색으로 바꾸는 toggleKidFriendlyDamage 기능이 있어요. 설정에도 없고 호출하는 곳도 없어요. 피 표현 제한 국가 목록(한국 하나)과 함께 쓰려던 것으로 보여요. <span class="b est">추정</span></p></article>
+  <article class="e"><h3>KidFriendlyDamage는 피격 UI 색을 바꾸는 함수예요<span class="b fix">정정</span></h3><p>toggleKidFriendlyDamage는 피격 UI의 배경·이미지 색을 바꿔요. 초기화 코드도 이미 어두운 회색 계열을 설정하므로, “기본 빨간 피를 검게 바꾼다”는 설명은 정확하지 않아요.</p><p>Blood 제한 지역 목록에 KR이 있는 것은 확인되지만, 이 함수와의 직접 연결·규제 이유·현재 활성 상태는 확인하지 못했어요. 이름과 목록만으로 기능의 목적을 확정하지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>HudStatusInterface: toggleKidFriendlyDamage·_init / PolicyConfig</p></details></article>
 
-  <article class="e"><h3>프리캠 흐림 효과</h3>
-    <p>프리캠을 켜면 화면 흐림(Blur) 효과가 함께 만들어져요. 탄이 스칠 때 흐려지고, 반복될수록 덜 흐려지는 둔감화 계산까지 들어 있는데, 흐림을 일으키는 함수를 아무도 부르지 않아서 실제로는 흐려지지 않아요.</p></article>
+  <article class="e"><h3>프리캠의 BlurSuppression 객체<span class="b est">범위 제한</span></h3><p>프리캠에는 BlurSuppression 객체를 만들고 갱신하는 코드가 있어요. BlurSuppression 안에는 충격·반복 자극 보정 계산도 있어요. 다만 첨부 프리캠 경로에서 충격을 주는 호출은 확인하지 못했어요.</p><p>정적 검색으로 확인한 호출 관계의 한계예요. 다른 로더·서버·동적 호출까지 포함해 “아무도 호출하지 않는다”고 확정할 수는 없어요.</p><details class="note"><summary>코드 근거</summary><p>FreeCameraObject / BlurSuppression / 첨부 호출 검색</p></details></article>
 
-  <article class="e"><h3>저사양 맵 단순화</h3>
-    <p>맵의 모든 부품 재질을 매끈한 플라스틱(SmoothPlastic)으로 바꾸는 simplify 기능이 있어요. 성능을 아끼려는 모드인데 설정에도 없고 호출되지 않아요.</p></article>
+  <article class="e"><h3>맵 재질 단순화 함수<span class="b est">범위 제한</span></h3><p>맵 부품 재질을 SmoothPlastic으로 바꾸는 simplify 함수가 있어요. 첨부 범위에서는 일반 설정 UI에서 이 함수를 호출하는 경로를 확인하지 못했어요. 함수가 정의되어 있다는 것과 현재 플레이에서 선택 가능한 모드라는 것은 구분해야 해요.</p><details class="note"><summary>코드 근거</summary><p>Effects: simplify / 첨부 호출 검색</p></details></article>
 
-  <article class="e"><h3>디버그 창 단축키</h3>
-    <p>Ctrl + L로 디버그 화면, Ctrl + I로 내부 상태 확인 창을 여는 코드가 있어요. 스튜디오에서는 Ctrl 없이도 돼요. 하지만 이 모듈을 불러오는 곳이 없어서 실제 게임에서는 눌러도 반응이 없어요.</p></article>
+  <article class="e"><h3>디버그 단축키는 초기화 여부가 중요해요<span class="b fix">정정</span></h3><p>디버그 관련 모듈에는 Ctrl+L·Ctrl+I 입력을 연결하는 코드가 있고, Studio에서는 Ctrl 검사를 생략하는 분기가 있어요. 해당 모듈의 초기화와 로더 실행 순서는 별도로 확인해야 해요.</p><p>직접 require나 호출 이름이 검색되지 않는다는 이유만으로 “게임에서는 반드시 반응하지 않는다”고 단정한 원문은 수정했어요. shared.require 기반 로더와 동적 호출이 있어 단순 문자열 검색은 실행 여부의 완전한 증명이 아니에요.</p><details class="note"><summary>코드 근거</summary><p>StateViewerInterface·DebuggingScreenGui 관련 _init / shared.require 구조</p></details></article>
 
-  <article class="e"><h3>무작위 상품 목록 생성기</h3>
-    <p>프리셋 목록과 스킨 목록을 무작위로 뽑고 할인율까지 붙이는 함수(generateRandomBlueprintList, generateRandomWeaponCamoList)가 있어요. 일일 상점과 같은 할인 추첨표를 쓰는데 클라이언트에서는 호출하지 않아요. 서버가 상점을 만들 때 쓰는 것으로 보여요. <span class="b est">추정</span></p></article>
+  <article class="e"><h3>상점용 무작위 상품 생성 함수<span class="b est">범위 제한</span></h3><p>BlueprintInterface의 generateRandomBlueprintList·generateRandomWeaponCamoList는 상품 목록과 가격 배율을 만들어요. 일반·Featured 추첨표를 선택하고, 이미 priceMultiplier가 지정된 프리셋은 그 값을 보존해요.</p><p>공유 모듈에 정의된 상품 생성 로직은 확인할 수 있지만, 서버가 어느 시점·인자·주기로 호출하는지는 첨부 클라이언트만으로 확정하지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>BlueprintInterface / PlayerShopConfig</p></details></article>
 
-  <article class="e"><h3>옛 데이터를 새 형식으로 바꾸는 코드</h3>
-    <ul>
-      <li>옛 설정 이름(looksen, aimsen, controllersens, aimaccel, lookaccel)을 지금 이름으로 옮기는 변환표가 있어요. 새 이름 중 하나가 "controllerlookccel"로 오타예요.</li>
-      <li>옛 인벤토리를 케이스·열쇠·스킨 단위의 지금 구조로 바꾸는 변환 함수도 남아 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>옛 설정과 인벤토리 변환<span class="b est">범위 제한</span></h3><ul><li>PlayerDataUtils에 looksen·aimsen·controllersens·aimaccel·lookaccel 등 옛 설정 키를 옮기는 표가 있어요. lookaccel의 대상 문자열은 실제로 controllerlookccel이에요.</li><li>옛 인벤토리를 케이스·열쇠·스킨 구조로 변환하는 코드도 있어요. 변환표가 남아 있다는 것만으로 현재 모든 계정에서 매번 실행된다는 뜻은 아니에요.</li></ul><details class="note"><summary>코드 근거</summary><p>PlayerDataUtils의 설정 매핑·레거시 인벤토리 변환</p></details></article>
 
-  <article class="e"><h3>쓰이지 않는 함수들</h3>
-    <ul>
-      <li>들고 있는 무기를 강제로 다시 장착하는 기능(forceReloadCurrentWeapon)</li>
-      <li>메뉴 카메라의 시야각을 바꾸는 기능(changeFieldOfView)</li>
-      <li>옛 배율 변경 함수(magnify), 지금은 setMagnification이 대신해요</li>
-      <li>근접 공격 명중 처리 함수 하나(meleeHitPlayer)</li>
-      <li>관리자 무기 차단을 토글하는 기능(toggleBlacklisted)</li>
-    </ul></article>
+  <article class="e"><h3>정의와 사용 여부를 구분해야 하는 함수들<span class="b fix">정정</span></h3><ul><li>WeaponControllerObject.forceReloadCurrentWeapon: 현재 무기를 강제로 다시 장착하는 경로.</li><li>MenuCameraObject.changeFieldOfView: 메뉴 카메라 FOV 변경.</li><li>MainCameraObject.magnify: 배율 관련 별도 함수. setMagnification도 존재해요.</li><li>HitDetectionInterface.meleeHitPlayer: 첨부에서는 함수 본문이 비어 있어요.</li><li>WeaponManagementInterface.toggleBlacklisted: 무기 차단 상태 토글.</li></ul><p>이 목록은 함수 정의에 관한 설명이에요. 외부 호출이 검색되지 않더라도 전체 시스템에서 영구적으로 사용되지 않는다고 판정하지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>위 각 모듈의 함수 정의 / 첨부 소스 참조 검색</p></details></article>
 
-  <article class="e"><h3>개발 환경에서만 달라지는 것</h3>
-    <ul>
-      <li>스튜디오에서는 조준점 색 변경에 필요한 킬이 200이 아니라 0이에요.</li>
-      <li>테스트 서버에서는 채팅창에 경고 문구가 따로 떠요.</li>
-      <li>관리자 권한은 "Developer"와 "Contractor" 두 역할로 나뉘어요.</li>
-      <li>모바일 판정 함수(isMobile)는 테스트 서버와 스튜디오에서만 참을 돌려줘요.</li>
-    </ul></article>
+  <article class="e"><h3>개발·시험 환경의 조건과 관리자 역할<span class="b fix">정정</span></h3><ul><li>Studio에서는 조준점 색 변경의 파츠 킬 요구량을0으로 처리해요. 일반 기본값은 해당 무기·조준 파츠의200킬이며, 무기의 전체 킬만으로 판단하지 않아요.</li><li>TestPlace 설정에는 isTesting=true가 있고, 테스트 환경 경고와 시험 무기 해금 예외가 있어요.</li><li>AdminConfig.roles는 <b>Developer·Admin·Contractor·Contributor·Moderator</b>의5개예요. 그룹 랭크 매핑은 Developer·Admin·Contractor에 정의되어 있어요. “두 역할만 있다”는 원문은 틀렸어요.</li><li>isMobile()의 Test/Studio 조건과 TouchEnabled 확인은 모바일 문단처럼 구분해서 봐야 해요.</li></ul><details class="note"><summary>코드 근거</summary><p>AdminConfig / PublicSettings / InstanceConfig·InstanceType / PlayerDataUtils</p></details></article>
 </section>
 
 <section id="lore" data-t="p">
   <header><h2>이야기와 이스터에그</h2><p>설명문과 데이터에 숨은 세계관과 장난이에요.</p></header>
 
-  <article class="e"><h3>설명문 속 가상 세계 지도</h3>
-    <p>무기와 파츠 설명에 실제 국가명이 거의 없고 가상의 나라가 나와요.</p>
-    <div class="scroll"><table>
-      <thead><tr><th>가상 국가</th><th>실제</th><th>근거</th></tr></thead>
-      <tbody>
-        <tr><td>Grand Federation</td><td>미국</td><td>M16, M4 (57회 등장)</td></tr>
-        <tr><td>Cascadia</td><td>캐나다</td><td>C7</td></tr>
-        <tr><td>Zarovia</td><td>러시아</td><td>AK, AN-94 (39회)</td></tr>
-        <tr><td>Eisenmark</td><td>독일</td><td>M416, Hensoldt</td></tr>
-        <tr><td>Soveran</td><td>영국</td><td>SA80, L85</td></tr>
-        <tr><td>Belvaunia</td><td>벨기에</td><td>SCAR, FAL, M249</td></tr>
-        <tr><td>Lysoria</td><td>프랑스</td><td>FAMAS</td></tr>
-        <tr><td>Selvazia</td><td>브라질</td><td>IMBEL</td></tr>
-        <tr><td>Jinhan</td><td>중국</td><td>QBU-88</td></tr>
-        <tr><td>Helzevia</td><td>스위스</td><td>그뤼니히 &amp; 엘미거</td></tr>
-        <tr><td>Valkar</td><td>노르웨이</td><td>AG-3</td></tr>
-        <tr><td>Nomensland</td><td>호주</td><td>F88, EF88</td></tr>
-        <tr><td>Tetsujin, Tetsugawa</td><td>일본</td><td>89식 후속, 카타나</td></tr>
-        <tr><td>Seongho</td><td>한국</td><td>K1A, K2, K7, K14</td></tr>
-        <tr><td>Hwanmok</td><td>북한</td><td>88식</td></tr>
-      </tbody></table></div>
-    <p>바꾸다 빠뜨린 실명도 있어요. "People's Liberation Army", "Swiss", "Slovenian", "Indonesian"이 그대로 남아 있어요.</p></article>
+  <article class="e"><h3>설명문에 등장하는 가상 지명<span class="b fix">정정</span></h3><p>무기 설명에는 가상 지명과 현실 지명이 함께 나와요. “실제 국가명이 거의 없다”거나 “정확히 이 현실 국가를 뜻한다”는 해석을 코드 사실로 적지 않았어요. 아래는 명칭과 사용 예예요.</p><div class="scroll"><table><thead><tr><th>명칭</th><th>해당 명칭·형용사가 나오는 무기 예</th></tr></thead><tbody><tr><td>Grand Federation</td><td>M416, M16A4, M16A3</td></tr><tr><td>Cascadia</td><td>C7A2, C8A3, TIMBERWOLF</td></tr><tr><td>Zarovia</td><td>AN-94, AK-47, AS VAL</td></tr><tr><td>Eisenmark</td><td>M38A5, STG-91, M416</td></tr><tr><td>Soveran</td><td>L85A2, L85A3, STG-89C</td></tr><tr><td>Belvaunia</td><td>MK16 SOCOM, FAL 50.00, MK17 SOCOM</td></tr><tr><td>Lysoria</td><td>FAMAS F1, FAMAS G2, FAMAS COMMANDO</td></tr><tr><td>Selvazia</td><td>IA2 AR, IA2 BR, JURY</td></tr><tr><td>Jinhan</td><td>QBZ-95, QBU-88, CS/LR-4A</td></tr><tr><td>Helzevia</td><td>M17, FT300, POCKET KNIFE</td></tr><tr><td>Valkar</td><td>GUSTAV 66</td></tr><tr><td>Nomensland</td><td>F90 MBR, EF88</td></tr><tr><td>Tetsujin</td><td>TYPE 20</td></tr><tr><td>Tetsugawa</td><td>HATTORI</td></tr><tr><td>Seongho</td><td>K2, K1A, M26 FRAG</td></tr><tr><td>Hwanmok</td><td>TYPE 88</td></tr></tbody></table></div><p>가상 지명과 현실 국가의 대응은 별도 세계관 자료가 없는 한 해석이에요. 설명문만으로 국가 간 일대일 대응이나 제작 의도를 확정할 수는 없어요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase의 description 문자열</p></details></article>
 
-  <article class="e"><h3>이름이 세 겹이에요</h3>
-    <p>내부 이름은 실총 이름(HK416, MP5, AUG, GLOCK 17), 화면 이름은 상표를 뺀 이름(M416, SMX-9, UAR, G17), 설명문은 가상 브랜드예요. 11.17의 G36 → STG-91 → AR36도 같은 흐름이에요.</p>
-    <ul>
-      <li>불펍을 일반형으로 바꾼 개조형 이름은 "UAR?", "L85A2?", "FAMAS?"처럼 물음표예요.</li>
-      <li>내부명 E GUN은 화면에 "COILGUN", E SHOTGUN은 "E-GUN"으로 서로 엇갈려요.</li>
-      <li>골든 데저트이글은 JUAN, 골든 ZIP 22는 LA RATA, 골든 톰슨은 TYPEWRITER예요. SUGAR WEASEL은 SALTY WEASEL, SFG 50만 소문자 "sfg 50"이에요.</li>
-      <li>M107은 화면에 M82A1로 나와요.</li>
-    </ul></article>
+  <article class="e"><h3>내부 이름과 화면 이름은 다를 수 있어요<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>내부 이름</th><th>첨부 displayname</th></tr></thead><tbody><tr><td>HK416</td><td>M416</td></tr><tr><td>MP5</td><td>SMX-9</td></tr><tr><td>AUG A1</td><td>UAR A1</td></tr><tr><td>GLOCK 17</td><td>G17</td></tr><tr><td>G36</td><td>STG-91</td></tr><tr><td>M107</td><td>M82A1</td></tr><tr><td>E GUN</td><td>COILGUN</td></tr><tr><td>E SHOTGUN</td><td>E-GUN</td></tr><tr><td>GOLDEN DEAGLE 50</td><td>JUAN</td></tr><tr><td>GOLDEN ZIP 22</td><td>LA RATA</td></tr><tr><td>GOLDEN TOMMY GUN</td><td>TYPEWRITER</td></tr><tr><td>SUGAR WEASEL</td><td>SALTY WEASEL</td></tr><tr><td>SFG 50</td><td>sfg 50</td></tr></tbody></table></div><p>이름에 물음표가 붙은 UAR?·L85A2?·FAMAS? 같은 외형 변형도 있어요. 첨부 G36의 표시 이름은STG-91이에요. 이름 변경 이유나 첨부 밖 버전의 AR36 변경은 이 자료로 확인할 수 없어 제외했어요.</p><details class="note"><summary>코드 근거</summary><p>각 무기 ModuleScript 이름·displayname·description</p></details></article>
 
-  <article class="e"><h3>해금 킬 수에 숨은 숫자</h3>
-    <div class="scroll"><table>
-      <thead><tr><th class="n">킬</th><th>파츠</th><th>의미</th></tr></thead>
-      <tbody>
-        <tr><td class="n">1337</td><td>자이로젯 로켓탄, Pro Mag</td><td>리트(leet)</td></tr>
-        <tr><td class="n">2029</td><td>AMT-Terminator</td><td>터미네이터의 미래 전쟁</td></tr>
-        <tr><td class="n">1917</td><td>ITHACA 참호 총열</td><td>1차대전</td></tr>
-        <tr><td class="n">1919</td><td>M1919</td><td>연식</td></tr>
-        <tr><td class="n">1977</td><td>OEG</td><td>1970년대 조준경</td></tr>
-        <tr><td class="n">1979</td><td>Maglite</td><td>창립 연도</td></tr>
-        <tr><td class="n">1991</td><td>M60 열화우라늄탄</td><td>걸프전</td></tr>
-        <tr><td class="n">4242</td><td>SUSAT</td><td>42</td></tr>
-        <tr><td class="n">2357</td><td>Five-seveN 풀오토</td><td>5.7</td></tr>
-        <tr><td class="n">223, 308, 556, 762</td><td>구경 변환</td><td>구경 숫자</td></tr>
-      </tbody></table></div></article>
+  <article class="e"><h3>눈에 띄는 해금 킬 숫자<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>내부 파츠 이름</th><th>기본 unlockkills</th></tr></thead><tbody><tr><td>Pro Mag</td><td>1337</td></tr><tr><td>AMT-Terminator</td><td>2029</td></tr><tr><td>OEG</td><td>1977</td></tr><tr><td>Maglite</td><td>1979</td></tr><tr><td>SUSAT Scope</td><td>4242</td></tr><tr><td>Hand Sight</td><td>5250</td></tr><tr><td>Anti Sight</td><td>5600</td></tr><tr><td>Handmade Sight</td><td>3000</td></tr><tr><td>Engravings</td><td>20000</td></tr><tr><td>Spring Mod</td><td>10000</td></tr></tbody></table></div><p>1337·2029·1979·4242 같은 값은 그대로 확인돼요. 그 숫자가 특정 작품·연도·역사를 의도했다는 설명은 제작자의 명시가 없으면 해석이에요. 무기·장착 칸별 override가 있으면 실제 해금값도 달라질 수 있어요.</p><details class="note"><summary>코드 근거</summary><p>각 AttachmentData의 unlockkills / 합성 장착 목록</p></details></article>
 
-  <article class="e"><h3>농담 같은 무기</h3>
-    <ul>
-      <li>ROPOD SHOTTY: 에어팟 케이스 산탄총, 설명 "REAL sussy...", 헤드 ×250, 연사 999,000.</li>
-      <li>KEK-50: 만우절 무기, 풀오토 .50 BMG.</li>
-      <li>RAILGUN, GOLDEN GUN, TOY M1911(관통 0), BOXY BUSTER(폼 다트).</li>
-      <li>COLA CANNON: 테니스공, 골프공, 대포알, 유리구슬 병(Marble Jar) 탄이 있어요. 구슬 병에는 전용 조작 애니메이션까지 있고 설명은 "금단의 캐비어를 먹어라"예요.</li>
-      <li>G1: 3발짜리 권총, "장전하느니 던지는 게 나을지도".</li>
-      <li>ChainSAW: 전기톱처럼 들고 쏘는 LMG 시제품, 조준경을 못 달아요.</li>
-      <li>ROLY HG: 몬티 파이썬의 거룩한 수류탄. PB 그레네이드에는 레프트 4 데드 패러디가 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>농담 같은 무기 데이터<span class="b fix">정정</span></h3><ul><li><b>ROPOD SHOTTY:</b> 무선 이어폰 충전 케이스를 무기로 만들었다는 설명이에요. 헤드 배율250,2발 점사, 명목999,000RPM이에요. 일반 풀오토 연사 수치로 읽으면 안 돼요.</li><li><b>KEK-50:</b> 설명에 April Fools가 있고 .50 BMG 풀오토 설정이에요. RAILGUN·GOLDEN GUN·관통0의 TOY M1911·폼 다트 BOXY BUSTER 같은 특수 무기도 있어요.</li><li><b>COLA CANNON:</b> 테니스공·골프공·대포알·Marble Jar 같은 탄약 데이터가 있어요. Marble Jar 설명은 구슬을 금단의 캐비어에 빗대요.</li><li><b>G1:</b> 내부 GLOCK 1, 탄창3발이며 설명에는 장전 대신 던져 버리는 편이 낫겠다는 농담이 있어요.</li><li><b>ChainSAW:</b> 전용 자세를 쓰고 기본 장착 목록의 조준경 칸은 비어 있어요.</li><li><b>ROLY HG·PB GRENADE:</b> 각각 세 번 세고 던지라는 긴 의식문, Mercy hospital 생존자 구조 헬기 이야기가 들어 있어요. 작품 출처와 실제 효과는 설명문과 구분해 읽어야 해요.</li></ul><details class="note"><summary>코드 근거</summary><p>각 무기 description·firemodes·firerate·multhead / COLA CANNON 탄약 / 합성 장착 목록</p></details></article>
 
-  <article class="e"><h3>웃긴 파츠와 탄약</h3>
-    <ul>
-      <li>Hand Sight의 표시 이름은 이모지 "👌👍"예요. 5,250킬, "엄지 끝으로 조준하세요".</li>
-      <li>Anti Sight는 "전쟁 고양이 Anti의 사이트, Nya!!", Handmade Sight는 "게임 최고의 조준경 (아님)".</li>
-      <li>Engravings는 20,000킬인데 효과가 없어요. Bloxy Cola와 Banana 탄약도 20,000킬이에요.</li>
-      <li>Suppressor.._는 5,000킬인데 발사음만 높아져요. 설명에 "사지 마세요"라고 적혀 있어요.</li>
-      <li>골든 ZIP 22의 Spring Mod(10,000킬)는 "부작용이 있을 수도"라더니 최대 데미지 9 → 19, 최소 4 → 15예요.</li>
-      <li>탄약 이름: E-GUN은 "Angry Pancakes", 바나나 탄창은 "Potassium(칼륨)", MK11 변환은 ".500 Phantom".</li>
-      <li>Amethyst Stream은 10발 점사, 총 이름이 "LMG BLING (AMETHYST)"로 바뀌어요.</li>
-      <li>SAIGA-50은 산탄총을 1발 저격총으로 바꿔요. .17 Incinerator는 탄속 ×2, 헤드 ×4 대신 데미지 절반이에요.</li>
-      <li>Ballistics Tracker는 "StyLiS 로고 휴대폰 거치대를 덕트테이프로 붙인 것"이에요.</li>
-      <li>Hensoldt Z24는 설명에 "숨 참기 없음"인데 데이터에는 숨 참기 수치가 있어요.</li>
-    </ul></article>
+  <article class="e"><h3>웃긴 파츠 이름과 설명·데이터의 차이<span class="b fix">정정</span></h3><ul><li>Hand Sight의 표시 이름은👌👍, 기본 해금은5,250킬이에요. Anti Sight에는 Nya!!, Handmade Sight에는 최고 조준경이라는 말 뒤에 아니라는 단서가 있어요.</li><li>Engravings는20,000킬의 외형용 파츠예요. Bloxy Cola·Banana에도20,000킬 설정이 있지만 모든 농담 파츠가 무효과인 것은 아니에요.</li><li>내부명 Suppressor..?는5,000킬이고 firepitch1.25와 총구 효과 기준점 변경을 설정해요. 설명에는 구매하지 말라는 농담이 있어요.</li><li>LA RATA용 Spring Mod는10,000킬이고 최대·최소 피해를9→19,4→15로 바꿔요.</li><li>Amethyst Stream에는10발 점사와 LMG BLING (AMETHYST) 이름 변경이 있어요.</li><li>Ballistics Tracker 설명은 StyLiS 로고 휴대폰 거치대를 테이프로 붙인 물건에 빗대요.</li><li>Hensoldt Z24 설명은 숨 참기가 없다고 하지만 데이터에는 blackscope와 breathspeed0.005가 있어요. 설명문을 수치보다 우선해서 믿으면 안 되는 예예요.</li></ul><details class="note"><summary>코드 근거</summary><p>각 파츠 AttachmentData / GOLDEN ZIP 22 / Hensoldt Z24</p></details></article>
 
-  <article class="e"><h3>설명문 속 인용과 드립</h3>
-    <ul>
-      <li>STG-59H(G3): 영화 블랙 호크 다운 대사 "집에 가면 왜 그랬냐고 묻겠지. 난 한마디도 안 할 거야."</li>
-      <li>KOMMANDO: "하나 가지면 세상을 가진다 (아님)"</li>
-      <li>RPK-16: "약간의 배신 위험 있음"</li>
-      <li>FAMAS 비불펍형: "마치 농담으로 만든 것 같지 않나요?"</li>
-      <li>AN-94: "반동을 느끼기 전에 두 발이 정확히 같은 곳에" (코드와 일치)</li>
-      <li>TASER "변호사에게 특히 효과적", SPARKLER "내 재산세가 터지는 기분", CUTTER "It's pizza time", TOON BLADE "혼자 가면 위험해!", STREITER "신과 애니메이션의 힘"</li>
-    </ul></article>
+  <article class="e"><h3>설명문은 분위기·농담과 성능 설명이 섞여 있어요<span class="b fix">정정</span></h3><ul><li>KOMMANDO에는 “하나 가지면 세상을 가진다”에 부정 단서가 붙고, RPK-16에는 배신 위험을 언급하는 농담이 있어요.</li><li>FAMAS 비불펍형에는 농담으로 만든 것 같다는 문장이 있어요.</li><li>STUN GUN(TASER)은 변호사에게 특히 효과적이라는 말, SPARKLER는 재산세가 폭발하는 기분, CUTTER는 피자, TOON BLADE는 혼자 가면 위험하다는 문구, STREITER는 신과 애니메이션의 힘을 언급해요.</li><li>AN-94 설명의 “두 발이 같은 곳에”는 특성을 표현한 문구예요. 실제 탄착은 남은 반동·퍼짐·자세·시간 처리까지 보아야 하므로 코드가 완전한 동일 좌표를 보장한다고 해석하지 않았어요.</li><li>FAMAS 설명에는 점사 반동−20%라고 적혀 있어도 실제 firemodestability0.3인 모델이 있어요. 성능은 해당 데이터와 계산 경로를 기준으로 정리했어요.</li></ul><details class="note"><summary>코드 근거</summary><p>각 무기 description / AN-94·FAMAS 계열 firemodestability / FirearmObject</p></details></article>
 
-  <article class="e"><h3>로딩 문구</h3>
-    <p>"May all your bacon burn", "h", "Stay Hydrated. This is a threat.", "I am become BFG-50 user, destroyer of Desert Storm lobbies." 그리고 팁 중에는 "탄은 크로스헤어가 아니라 총구 방향으로 나간다"도 있어요.</p></article>
+  <article class="e"><h3>로딩 문구와 팁<span class="b est">범위 제한</span></h3><p>로딩 문구에는 “May all your bacon burn”, “h”, “Stay Hydrated. This is a threat.”와 BFG-50·Desert Storm을 소재로 한 농담이 있어요.</p><p>총알이 크로스헤어가 아니라 무기가 향한 쪽으로 나간다는 팁도 있어요. 실제 구현에서는 지향사격 총구와 조준 중 활성 sight 기준점을 구분해야 해요. 로딩 팁도 상세 코드의 예외를 모두 설명하는 것은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>Quotes·Tips / FirearmObject: fireRound</p></details></article>
 
-  <article class="e"><h3>기념과 선물 무기</h3>
-    <ul>
-      <li>UKULELE: 설명 "Happy Birthday ~ Love, Fyre", 개인 생일 선물이에요.</li>
-      <li>BAN HAMMER: 운영진 감사 기념품.</li>
-      <li>SCL-S1~S4: StyLiS 경쟁 리그 우승 트로피, 1시즌 우승팀은 GANG.</li>
-      <li>THE COUNTDOWN: 2023년 기념, 해금 랭크 2022.</li>
-      <li>JKEY: 2018 Ready Player One 이벤트 보상.</li>
-    </ul></article>
+  <article class="e"><h3>기념·선물·리그 트로피 설명<span class="b est">범위 제한</span></h3><ul><li>UKULELE 설명에는 생일 축하와 Love, Fyre가 있어요. 누구에게 어떤 경로로 지급했는지까지는 확인하지 않았어요.</li><li>BAN HAMMER에는 운영진의 시간과 노력에 감사하는 기념 문구가 있어요.</li><li>SCL-S1:GANG, SCL-S2:ID, SCL-S3:DRASTIC, SCL-S4:MALICIOUS INTENT는 각 시즌 우승 관련 설명을 담고 있어요.</li><li>THE COUNTDOWN 설명은2023년까지의 지원에 감사하고, unlockrank는2022예요.</li><li>JKEY 설명에는2018 Ready Player One 이벤트 참여 보상이라고 적혀 있어요.</li></ul><details class="note"><summary>코드 근거</summary><p>각 무기 description·unlockrank</p></details></article>
 
-  <article class="e"><h3>이벤트 연대기와 만든 사람들</h3>
-    <p>설명문에 2018 Ready Player One, 2020 할로윈·홀리데이, 2023 크리스마스, 2024 만우절이 남아 있어요. C25 설명에는 "2025년 실전 배치"라고 적혀 있어요.</p>
-    <p>제작자 표기는 Vic, Makosushi, Shay, ILLAXIS, Shelby가 가장 많고 Duo, Darkman_Bree, Rialag가 뒤를 이어요. FAMAS 비불펍형과 RPK-16은 "Mysterious Modeler X"예요.</p></article>
+  <article class="e"><h3>설명문의 연도와 제작자 표기<span class="b fix">정정</span></h3><p>첨부 설명에는 이벤트 연도와 제작자 크레딧이 섞여 있어요. 예를 들어 JKEY는2018 이벤트, THE COUNTDOWN은2023 기념을 언급해요. C25의2025년 배치 설명은 무기 설명 안의 설정이며, 그 문자열만으로 실제 역사나 파일의 패치 버전을 정할 수는 없어요.</p><p>제작자 표기는 description에 자유 형식으로 들어 있어요. FAMAS 변형·RPK-16 등에 Mysterious Modeler X가 있고, 여러 총에 모델 제출·리모델링 크레딧이 있어요. 공동 제작과 표기 차이를 정규화하지 않은 “제작자 순위”는 제외했어요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase의 description 문자열</p></details></article>
 
-  <article class="e"><h3>스킨과 프리셋</h3>
-    <ul>
-      <li>스킨 1,142개 중 등급 6은 디버그용 "Test" 하나뿐이에요.</li>
-      <li>밈 케이스에 Harambe, Sanic, Pepe, "RUSH B", "no u"가 있어요. "Amigara Fault"(이토 준지), "Ghostfreak"(벤 10) 같은 이름도 있어요.</li>
-      <li>커뮤니티 프리셋 이름에 M16A1 NCR SERVICE RIFLE(폴아웃), M37 TEUFORT CLASSIC(TF2), SKORPION VZ61 LLENN(소드 아트 온라인), BOCCHI THE BLOCK이 있어요.</li>
-      <li>AK12BR ITS LIT 프리셋은 손전등 두 개에 조준경 칸까지 Maglite를 달았어요.</li>
-    </ul></article>
+  <article class="e"><h3>스킨 1,142개와 프리셋의 이름<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>CamoDatabase Rarity</th><th>항목 수</th></tr></thead><tbody><tr><td>1</td><td>360</td></tr><tr><td>2</td><td>307</td></tr><tr><td>3</td><td>227</td></tr><tr><td>4</td><td>141</td></tr><tr><td>5</td><td>106</td></tr><tr><td>6</td><td>1</td></tr></tbody></table></div><ul><li>등급6은 Test 하나예요. 등급5 스킨 데이터도106개 있으므로 “스킨 등급5가 존재하지 않는다”는 식으로 일반화하면 안 돼요. 케이스의 Legendary 무기 결과와 별개예요.</li><li>Harambe·Sanic·Pepe·RUSH B·no u와 Amigara Fault·Ghostfreak 같은 이름이 데이터에 있어요. 이름만으로 공식 협업·라이선스 관계를 뜻하지는 않아요.</li><li>프리셋에는 M16A1 NCR SERVICE RIFLE, M37 TEUFORT CLASSIC, SKORPION VZ61 LLENN, BOCCHI THE BLOCK이 있어요.</li><li>AK12BR ITS LIT은 Optics에Maglite, Underbarrel·Other에Flashlight를 넣은 조합이에요.</li></ul><details class="note"><summary>코드 근거</summary><p>CamoDatabase / WeaponBlueprints / AK12BR ITS LIT</p></details></article>
 </section>
 
 <section id="archive" data-t="p">
-  <header><h2>코드 고고학</h2><p>10년 넘게 쌓인 코드에 남은 흔적이에요.</p></header>
+  <header><h2>코드 고고학</h2><p>데이터 참조·호환 코드·문자열에 남은 흔적과 집계예요.</p></header>
 
-  <article class="e"><h3>삭제됐는데 데이터가 남은 파츠 40개</h3>
-    <ul>
-      <li>Saiga-12 구경 변환 10종: .223, .308, 7.62x39, 9.6x53, 9mm를 S-12와 S-12U 두 변형으로.</li>
-      <li>FAMAS F1을 G2로 바꾸는 개조 파츠. 지금은 G2가 별도 총이에요.</li>
-      <li>MAC-11용 버퍼 3종과 탄창 2종, MP5 .40 변환.</li>
-      <li>AUG .22 LR 변환: 설명이 "진짜 노리코일 느낌을 원했다며?"예요.</li>
-    </ul></article>
+  <article class="e"><h3>기본 장착 목록에서 참조되지 않는 데이터<span class="b fix">정정</span></h3><p>파츠730개 중 합성한 기본 장착 목록에 이름이 등장하지 않는 데이터는43개예요. 이 중 “3Â½ Shell”은 목록의 “3½ Shell”과 문자열이 다른 사례여서, 나머지42개와 구분해야 해요.</p><p>그 밖에는 Saiga 구경 변환10종, FAMAS G2 Conversion, MAC-11 버퍼·탄창, AUG .22 LR Conversion 등이 있어요. 원문의40개 집계와 MP5 .40 변환 예시는 이 스냅샷에 맞지 않아요.</p><details class="note"><summary>참조되지 않은 43개 이름 보기</summary><ul><li>.223 Remington (Alt)</li><li>3Â½ Shell</li><li>AUG .22 LR Conversion</li><li>CS/LR Marksman Kit</li><li>Carry Handle Sight ACR</li><li>Carry Handle Sight RRA</li><li>FAL .45 Conversion</li><li>FAL 5.56 Conversion</li><li>FAMAS G2 Conversion</li><li>ITHACA Sawn Off</li><li>MAC-10 Buffer M</li><li>MAC-11 32rd Mag</li><li>MAC-11 50rd Mag</li><li>MAC-11 Buffer L</li><li>MAC-11 Buffer M</li><li>MAC-11 Buffer S</li><li>MAC10 Fold Stock</li><li>Nylon Strap Grip</li><li>PARA .45 Conversion</li><li>PARA 5.56 Conversion</li><li>R10/22 .17 HMR</li><li>R10/22 Drum Magazine</li><li>R10/22 Full-Auto Conv</li><li>R10/22 Rat Shot</li><li>R10/22 Reduced Magazine</li><li>Remove Suppressor</li><li>S-12 223 Conversion</li><li>S-12 308 Conversion</li><li>S-12 762 Conversion</li><li>S-12 953 Conversion</li><li>S-12 9MM Conversion</li><li>S-12U 223 Conversion</li><li>S-12U 308 Conversion</li><li>S-12U 762 Conversion</li><li>S-12U 953 Conversion</li><li>S-12U 9MM Conversion</li><li>SA58 .45 Conversion</li><li>SA58 5.56 Conversion</li><li>SA58 Shorty Barrel</li><li>SHORTY .45 Conversion</li><li>SHORTY 5.56 Conversion</li><li>SVU Backup Sights</li><li>Shorty Stock</li></ul></details><p>이 결과는 <b>기본 장착 목록의 정적 참조</b>를 비교한 것이에요. 삭제 확정 목록이나 서버·이벤트·프리셋을 포함한 모든 사용 경로의 부재를 의미하지 않아요.</p><details class="note"><summary>코드 근거</summary><p>AttachmentDatabase/Categories 730개 / AttachmentDataSets·Sets·각 총기 attachmentModifiers 합성</p></details></article>
 
-  <article class="e"><h3>유령 참조와 환불 목록</h3>
-    <ul>
-      <li>삭제된 "PARA .45 Conversion"이 FAL 50.63 PARA의 장착 충돌 목록에 아직 남아 있어요.</li>
-      <li>삭제된 파츠를 산 사람에게 크레딧을 돌려주는 목록이 총 데이터에 있어요. G17·G18의 .50 변환, SUPER SHORTY·MODEL 870의 Extended Tube예요.</li>
-      <li>JKEY에만 있는 rpo = true(Ready Player One)는 현재 어떤 코드도 읽지 않아요.</li>
-      <li>한국(KR)이 "Blood" 제한 지역 목록에 유일하게 있지만 현재 코드에서는 쓰이지 않는 흔적이에요.</li>
-    </ul></article>
+  <article class="e"><h3>남아 있는 이름·환불 목록·정책 키<span class="b fix">정정</span></h3><ul><li>PARA .45 Conversion은 기본 장착 목록에서 빠져도 FAL 50.63 PARA의 충돌 관련 문자열에 남아 있어요. 이것만으로 삭제 시점을 알 수는 없어요.</li><li>GLOCK 17·18의 refund에는 각각 G17 .50 Conversion·G18 .50 Conversion, SERBU SHOTGUN·REMINGTON 870에는 Extended Tube가 있어요. 실제 환불 지급·시점은 서버 이력이 필요해요.</li><li>JKEY에는 rpo=true가 있어요. 첨부 범위의 참조 검색 결과와 전체 서비스에서의 사용 여부는 구분해야 해요.</li><li>PolicyConfig의 Blood 목록은 KR 하나예요. 적용 이유나 실제 강제 여부를 이 설정만으로 확정할 수는 없어요.</li></ul><details class="note"><summary>코드 근거</summary><p>해당 WeaponDatabase의 충돌·refund·rpo / PolicyConfig</p></details></article>
 
-  <article class="e"><h3>해금 랭크가 아주 높은 총</h3>
-    <p>KORD-R 362(XP 약 6,570만), RM 277 277(이름과 같은 숫자), MTS-569 269, ChainSAW 226이에요. 랭크로 열기보다 크레딧으로 사는 게 현실적인 총들이에요.</p></article>
+  <article class="e"><h3>높은 해금 랭크와 누적 XP<span class="b est">계산</span></h3><div class="scroll"><table><thead><tr><th>총기</th><th>unlockrank</th><th>공식상 누적 XP</th></tr></thead><tbody><tr><td>KORD-R</td><td>362</td><td>65,703,000</td></tr><tr><td>RM 277</td><td>277</td><td>38,503,000</td></tr><tr><td>MTS-569</td><td>269</td><td>36,315,000</td></tr><tr><td>ChainSAW</td><td>226</td><td>25,651,000</td></tr></tbody></table></div><p>이 표는 랭크 요구량의 계산이에요. 특정 계정의 소유 상태·할인·특수 해금 조건은 포함하지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase unlockrank / PlayerDataUtils의 랭크·XP 함수</p></details></article>
 
-  <article class="e"><h3>옛 코드와 새 코드가 섞여 있어요</h3>
-    <ul>
-      <li>폐기 예정 API FindPartOnRay가 8곳(착지, 수류탄, 탄도 계산기, 레이저)에 남아 있고, 바로 옆에서는 최신 :Raycast(13곳)와 buffer 라이브러리를 써요.</li>
-      <li>자체 제작 이벤트 :connect가 437곳, 로블록스 기본 :Connect가 175곳이에요.</li>
-      <li>팀은 이름이 아니라 색(고스트 Bright orange, 팬텀 Bright blue)으로 구분해요.</li>
-      <li>최상위 폴더 이름이 "Enviroment", 무기 차단 이벤트 이름이 "initalizeWeaponBlacklist"예요.</li>
-    </ul></article>
+  <article class="e"><h3>여러 세대의 구현 방식이 함께 있어요<span class="b fix">정정</span></h3><ul><li>FindPartOnRay 계열 호출과 workspace:Raycast, buffer 기반 데이터 처리가 함께 있어요. 사용 API 이름만으로 코드의 정확한 작성 연도·패치 버전을 정할 수는 없어요.</li><li>자체 신호의 :connect와 Roblox 이벤트의 :Connect가 함께 쓰여요. 대소문자가 다르다고 모두 오타는 아니에요.</li><li>팀 구분에는 Bright orange·Bright blue 색을 쓰는 경로가 있어요.</li><li>Enviroment라는 폴더명과 initalizeWeaponBlacklist라는 이벤트 문자열이 실제로 남아 있어요. 이런 내부 이름은 임의로 교정하면 연결이 깨질 수 있어요.</li></ul><details class="note"><summary>코드 근거</summary><p>ClientModules·SharedModules의 호출·팀 판정·폴더 및 네트워크 문자열</p></details></article>
 
-  <article class="e"><h3>쓰이지 않거나 잘못 복사된 것</h3>
-    <ul>
-      <li>Adrenaline 전용 이동 설정(점프 쿨다운 0.15초 등)은 정의만 있고 11.16 클라이언트에서 쓰이지 않아요.</li>
-      <li>"Vault" 키 바인딩 파일 내용이 "Jump No Vault"와 똑같이 복붙돼 있어요.</li>
-      <li>[ 키는 팔 숨기기, ] 키는 총 숨기기로 바인딩돼 있지만 로블록스 스튜디오에서만 작동해요.</li>
-      <li>11.17 신기능인 스킨 회전의 편집 UI와 "회전 금지" 스킨 23개가 11.16 데이터에 이미 있었어요.</li>
-    </ul></article>
+  <article class="e"><h3>복사 오류로 보였던 항목을 다시 확인했어요<span class="b fix">정정</span></h3><ul><li><b>Vault와 Jump No Vault는 같은 파일이 아니에요.</b> 구조는 비슷하지만 displayName·index가 각각 Vault와 Jump No Vault로 다르게 지정돼 있어요.</li><li>CharacterConfig에는 Adrenaline용 이동 설정도 있어요. 첨부 CharacterObject의 주된 사용 경로와 별개로 정의되어 있으나 서버·동적 로더까지 포함한 완전한 미사용 판정은 하지 않았어요.</li><li>[·]로 팔·총 표시를 바꾸는 디버그 바인딩에는 Studio 조건이 있어요.</li><li>스킨 회전 편집 UI는0~360°를 지원하고, CamoDatabase23개에는 excludedProperties에Rotation이 있어요. 첨부 버전을 확인하지 못했으므로 특정 후속 패치의 선행 구현이라는 연대기는 제외했어요.</li></ul><details class="note"><summary>코드 근거</summary><p>ActionBindVault·ActionBindJumpNoVault / CharacterConfig·CharacterObject / FirearmObject / DisplayCamoEditRotation·CamoDatabase</p></details></article>
 
-  <article class="e"><h3>10년 치 오타</h3>
-    <div class="scroll"><table>
-      <thead><tr><th>오타</th><th>위치</th></tr></thead>
-      <tbody>
-        <tr><td>Recieved N rounds</td><td>탄약 획득 메시지, 실제 화면에 떠요</td></tr>
-        <tr><td>velcoity, freezze, primaly, moderized, specalize, Disclaminer</td><td>설명문</td></tr>
-        <tr><td>late 1978s</td><td>FAMAS 설명</td></tr>
-        <tr><td>Vanilla Gellato</td><td>스킨 이름</td></tr>
-        <tr><td>extenndedreload</td><td>NTW-20 애니메이션 이름</td></tr>
-        <tr><td>Enviroment, initalize</td><td>코드 이름</td></tr>
-      </tbody></table></div></article>
+  <article class="e"><h3>실제로 확인한 철자와 문자열<span class="b est">범위 제한</span></h3><div class="scroll"><table><thead><tr><th>문자열</th><th>위치</th></tr></thead><tbody><tr><td>Recieved … rounds</td><td>FirearmObject의 탄약 획득 customAward</td></tr><tr><td>velcoity</td><td>GB 12G Conversion 설명</td></tr><tr><td>freezze</td><td>ICICLE 설명</td></tr><tr><td>primaly</td><td>CURSED SHINAI 설명</td></tr><tr><td>moderized</td><td>K2 설명</td></tr><tr><td>specalize</td><td>AG-3 설명</td></tr><tr><td>Disclaminer</td><td>Handmade Sight 설명</td></tr><tr><td>late 1978s</td><td>FAMAS 계열 설명</td></tr><tr><td>Vanilla Gellato*</td><td>스킨 이름</td></tr><tr><td>extenndedreload</td><td>NTW-20 애니메이션 키</td></tr><tr><td>controllerlookccel</td><td>옛 설정 변환표</td></tr><tr><td>Enviroment·initalizeWeaponBlacklist</td><td>폴더·이벤트 이름</td></tr></tbody></table></div><p>코드 식별자·저장 키는 의도적으로 원문 철자를 보존했어요. 이 문서가 해당 모듈 파일 자체를 수정한 것은 아니에요.</p><details class="note"><summary>코드 근거</summary><p>각 문자열이 정의된 첨부 소스</p></details></article>
 
-  <article class="e"><h3>누적 규모 (11.16)</h3>
-    <p>총기 약 290종, 근접무기 107종, 수류탄 17종, 파츠 719개(그중 남은 삭제분 40개), 스킨 1,142개, 공식 프리셋 753개예요.</p></article>
+  <article class="e"><h3>첨부 스냅샷의 정확한 집계<span class="b fix">정정</span></h3><div class="scroll"><table><thead><tr><th>분류</th><th>수</th></tr></thead><tbody><tr><td>총기</td><td>292</td></tr><tr><td>근접무기</td><td>107</td></tr><tr><td>수류탄</td><td>17</td></tr><tr><td>WeaponDatabase 합계</td><td>416</td></tr><tr><td>파츠 AttachmentData</td><td>730</td></tr><tr><td>장착 세트 모듈</td><td>143</td></tr><tr><td>스킨 CamoDatabase</td><td>1142</td></tr><tr><td>프리셋</td><td>753</td></tr><tr><td>추출된 Lua 소스 항목</td><td>2712</td></tr></tbody></table></div><p>숨김·시험·특수·중복 외형 항목을 포함한 데이터 수예요. 현재 서비스의 플레이 가능한 아이템 수와 같지 않아요. 무기 모델과 ModuleScript를 중복으로 세지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>SharedModules·ClientModules·ProductionContent XML 구조 / Source 속성과 각 데이터 항목 집계</p></details></article>
+
+<article class="e"><h3>총기 분류별 데이터 수<span class="b fix">추가</span></h3><div class="scroll"><table><thead><tr><th>WeaponDatabase 폴더 분류</th><th>수</th></tr></thead><tbody><tr><td>ASSAULT RIFLE</td><td>44</td></tr><tr><td>PDW</td><td>38</td></tr><tr><td>CARBINE</td><td>36</td></tr><tr><td>PISTOLS</td><td>35</td></tr><tr><td>LMG</td><td>30</td></tr><tr><td>SNIPER RIFLE</td><td>27</td></tr><tr><td>BATTLE RIFLE</td><td>18</td></tr><tr><td>DMR</td><td>18</td></tr><tr><td>SHOTGUN</td><td>16</td></tr><tr><td>MACHINE PISTOLS</td><td>12</td></tr><tr><td>OTHER</td><td>10</td></tr><tr><td>REVOLVERS</td><td>8</td></tr></tbody></table></div><p>로드아웃 폴더 분류를 센 값이에요. 탄약 공유 등에 사용하는 내부 type과 다를 수 있어요.</p><details class="note"><summary>코드 근거</summary><p>WeaponDatabase 폴더·각 총기 type</p></details></article>
 </section>
 
 <section id="limits">
-  <header><h2>정정과 한계</h2><p>대화 중에 바로잡은 내용과 확인하지 못한 범위예요.</p></header>
+  <header><h2>정정과 한계</h2><p>기존 문서의 주요 오류와 이번 검증의 범위를 정리했어요.</p></header>
 
-  <article class="e"><h3>바로잡은 내용 <span class="b fix">정정</span></h3>
-    <ul>
-      <li>Nomensland는 오스트리아가 아니라 호주예요(F88·EF88 설명 근거).</li>
-      <li>콘솔 서버의 큰 히트박스는 서버 전체가 아니라 컨트롤러만 쓰는 플레이어에게만 적용돼요.</li>
-      <li>Adrenaline 서버의 이동 설정은 클라이언트에서 쓰이지 않아요.</li>
-      <li>AK-12의 체인소 그립 전용 설정은 팔 위치(외형)뿐이에요. 성능까지 바뀌는 총별 설정은 드물어요(그립은 I MP-9 한 종, SAP는 14종 중 9종).</li>
-      <li>.223 Rem은 11.16 기준 53종, 11.17 반영 시 54종이에요.</li>
-      <li>내장 Lua 파서·인터프리터는 관리자 기능뿐 아니라 모바일 배치 코드 편집기에도 쓰여요.</li>
-    </ul></article>
+  <article class="e"><h3>주요 정정 내역<span class="b fix">정정</span></h3><ul><li>버전을 특정하는 근거 없는11.16·11.17 서술과 후속 패치 수치를 제거했어요. 기준은 첨부3개 모듈 스냅샷이에요.</li><li>첫 발 정확도·이동 크로스헤어·레이더 경고·수류탄 투척 시점·프리캠 범위를 실제 코드 조건에 맞췄어요.</li><li>콘솔 히트박스의 공격자 입력 조건, VIP의 해금 예외·투표 설정, 관리자5개 역할을 바로잡았어요.</li><li>총기·파츠·프리셋 집계를 새로 하고, 한 방 거리·탄 낙차·케이스 기대값을 조건과 함께 다시 계산했어요.</li><li>파츠 합성의9단계·우선순위·무기별 override를 반영하고, 검증 없는 전체 최강 조합 순위는 제거했어요.</li><li>“호출이 검색되지 않음”과 “기능 삭제·비활성 확정”을 구분했고, 설명문·세계관 해석을 성능 사실과 분리했어요.</li></ul><details class="note"><summary>코드 근거</summary><p>이 문서 각 항목의 펼침형 코드 근거</p></details></article>
 
-  <article class="e"><h3>확인하지 못한 범위</h3>
-    <p>모두 11.16 클라이언트·공유 코드와 콘텐츠 데이터 기준이에요. 실제 데미지 판정, 회복 시작 대기 시간, 수류탄 궤적, 보상 지급처럼 서버가 처리하는 규칙은 이 파일들로 알 수 없어요. 제압 둔감화나 스팟 거리처럼 클라이언트 코드만 보고 판단한 내용도 서버에서 달라질 수 있어요.</p></article>
+  <article class="e"><h3>검증 범위와 남은 한계<span class="b est">범위 제한</span></h3><p>입력은 SharedModules(1).rbxmx, ClientModules(1).rbxmx, ProductionContent.rbxmx와 기존 pfun.html이에요. XML에서 Lua Source와 콘텐츠 속성을 읽고, 데이터·호출 경로를 정적으로 대조했어요. 게임을 실행하거나 서버 로그로 실측한 결과는 아니에요.</p><p>공유 코드에 있는 데미지 보간·가격·케이스 추첨 규칙은 확인했어요. 다만 서버의 최종 명중 승인, 회복 시작 시점의 결정, 수류탄 실제 궤적·폭발 승인, 보상 지급과 운영 설정은 누락된 서버 코드·런타임 값이 필요해요. 모듈의 기본값이 현재 공개 서버의 배포값과 같다고 보장하지 않아요.</p><p>표의 수치는 특별히 표시하지 않으면 무파츠 원본 데이터예요. 장착 파츠·입력 장치·자세·서버 종류·특수 권한이 결과를 바꾸는 경우에는 본문에 조건을 적었어요.</p><details class="note"><summary>코드 근거</summary><p>첨부 파일4개 / 정적 분석 범위</p></details></article>
+
+<article class="e"><h3>수치와 설명이 충돌할 때의 기준<span class="b fix">추가</span></h3><p>이 문서는 실제 계산 함수 → 합성된 수치 → 원본 필드 → 설명문 순으로 의미를 확인했어요. 설명문이 오래되었거나 농담인 경우에는 그 사실을 표시했어요. 알 수 없는 운영 이력·출시 계획은 데이터가 있다는 이유만으로 추가하지 않았어요.</p><details class="note"><summary>코드 근거</summary><p>FirearmObject·ContentUtils·StatModifierUtils와 description 비교</p></details></article>
 </section>
 
 </main>
 
 <footer>
-  <div class="wrap">11.16 게임 모듈과 11.17 비공식 패치노트를 바탕으로 정리했어요. 공식 자료가 아니에요.</div>
+  <div class="wrap">첨부된 SharedModules(1).rbxmx · ClientModules(1).rbxmx · ProductionContent.rbxmx를 기준으로 정정했어요. 원본 CSS·검색 기능을 유지한 비공식 코드 해설이며, 현재 서버 배포값을 보증하지 않아요.</div>
 </footer>
 
 <script>
