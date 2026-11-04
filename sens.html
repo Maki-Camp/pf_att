@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>cm/360 감도 계산기</title>
+<title>감도 계산기 · cm/360</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
 :root{
   --bg:#E9EEF3; --surface:#FFFFFF; --ink:#12202F; --muted:#566879; --line:#C9D3DD;
   --tape:#F5C518; --tape-ink:#2A2200; --track:#DCE4EC;
-  --accent:#1F4FD8; --accent-ink:#FFFFFF; --warn:#A5360F;
+  --accent:#1F4FD8; --accent-ink:#FFFFFF; --accent-soft:#E2E9FB; --warn:#A5360F; --warn-soft:#FBE9E1;
   --font:"IBM Plex Sans KR","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",system-ui,sans-serif;
   color-scheme:light;
   box-sizing:border-box;
@@ -21,121 +21,167 @@
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0F1720; --surface:#17222E; --ink:#E8EEF4; --muted:#93A4B5; --line:#2B3A49; --track:#223140;
-    --accent:#7FA0FF; --accent-ink:#0B1220; --warn:#FF9A6B;
+    --accent:#7FA0FF; --accent-ink:#0B1220; --accent-soft:#1D2A47; --warn:#FF9A6B; --warn-soft:#3A2219;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0F1720; --surface:#17222E; --ink:#E8EEF4; --muted:#93A4B5; --line:#2B3A49; --track:#223140;
-  --accent:#7FA0FF; --accent-ink:#0B1220; --warn:#FF9A6B;
+  --accent:#7FA0FF; --accent-ink:#0B1220; --accent-soft:#1D2A47; --warn:#FF9A6B; --warn-soft:#3A2219;
   color-scheme:dark;
 }
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%}
-main{max-width:680px;margin:0 auto;padding:20px 16px 48px}
-h1{font-size:1.5rem;line-height:1.25;margin:8px 0 6px;font-weight:700;letter-spacing:-0.01em}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:1.55rem;line-height:1.25;margin:8px 0 6px;font-weight:700;letter-spacing:-0.01em}
 .lead{margin:0 0 18px;color:var(--muted);font-size:.95rem}
-.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
-.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--track);padding:4px;border-radius:11px;margin-bottom:14px}
-.seg input{position:absolute;opacity:0;pointer-events:none}
-.seg label{display:block;text-align:center;padding:9px 6px;border-radius:8px;font-size:.92rem;font-weight:500;cursor:pointer;color:var(--muted)}
-.seg input:checked + label{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
-.seg input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
-.tabs{margin-bottom:16px}
-.tabs label{font-size:1rem;font-weight:700;padding:11px 6px}
-.field{margin-bottom:12px}
-.field:last-child{margin-bottom:0}
-.field > label,.field > .lbl{display:block;font-size:.85rem;color:var(--muted);margin-bottom:5px}
-select,input[type=text],input[type=number]{width:100%;font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:46px;font-variant-numeric:tabular-nums}
-select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}
-.chip{font:inherit;font-size:.82rem;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;min-height:32px}
-.chip:hover{border-color:var(--accent)}
-.hint{font-size:.8rem;color:var(--muted);margin:6px 0 0}
-.hint.warn{color:var(--warn)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:12px}
+.q{font-size:1rem;font-weight:700;margin:0 0 10px}
 [hidden]{display:none !important}
 
-.result{padding:18px 16px 14px}
-.result .cap{font-size:.85rem;color:var(--muted);margin:0}
-.big{font-size:3rem;line-height:1.1;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin:2px 0 2px;word-break:break-all}
-.big small{font-size:1.1rem;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0}
-.empty{color:var(--muted);font-size:1rem;font-weight:500;padding:6px 0}
+/* 토글(두 개 중 하나) */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--track);padding:4px;border-radius:11px;margin-bottom:14px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{display:flex;align-items:center;justify-content:center;text-align:center;min-height:40px;padding:6px;border-radius:8px;font-size:.9rem;font-weight:500;cursor:pointer;color:var(--muted);line-height:1.3}
+.seg input:checked + label{background:var(--surface);color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.seg input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+.tabs{margin-bottom:14px}
+.tabs label{font-size:1rem;font-weight:700;min-height:48px}
 
-.tape-wrap{padding:0 10px;margin:20px 0 6px}
+/* 게임 고르기 버튼 */
+.games{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+@media (max-width:520px){.games{grid-template-columns:repeat(2,1fr)}}
+.games input{position:absolute;opacity:0;pointer-events:none}
+.games label{display:flex;align-items:center;justify-content:center;text-align:center;min-height:46px;padding:8px 6px;border:1px solid var(--line);border-radius:10px;font-size:.93rem;font-weight:500;cursor:pointer;background:var(--bg);line-height:1.25}
+.games input:checked + label{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent);font-weight:700}
+.games input:focus-visible + label{outline:2px solid var(--accent);outline-offset:2px}
+
+.field{margin-bottom:12px}
+.field:last-child{margin-bottom:0}
+.field > label{display:block;font-size:.88rem;color:var(--ink);font-weight:500;margin-bottom:5px}
+input[type=number]{width:100%;font:inherit;font-size:1.05rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:11px 12px;min-height:48px;font-variant-numeric:tabular-nums}
+input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row .field{margin-bottom:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.chip{font:inherit;font-size:.82rem;padding:5px 11px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--ink);cursor:pointer;min-height:34px}
+.chip:hover{border-color:var(--accent)}
+.hint{font-size:.82rem;color:var(--muted);margin:8px 0 0}
+.mt{margin-top:14px}
+.check{display:flex;gap:10px;align-items:center;font-size:.92rem;min-height:44px;cursor:pointer;margin-top:10px}
+.check input{width:20px;height:20px;accent-color:var(--accent);margin:0}
+
+/* 결과 */
+.result{padding:18px 16px 16px;border-width:2px;border-color:var(--accent)}
+.cap{font-size:.88rem;color:var(--muted);margin:0;font-weight:500}
+.res-top{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.big{font-size:3rem;line-height:1.1;font-weight:700;letter-spacing:-0.02em;font-variant-numeric:tabular-nums;margin:2px 0 0;word-break:break-all}
+.big small{font-size:1.2rem;font-weight:500;color:var(--muted);margin-left:6px;letter-spacing:0}
+.copy{font:inherit;font-size:.88rem;font-weight:700;padding:8px 14px;border-radius:999px;border:0;background:var(--accent);color:var(--accent-ink);cursor:pointer;min-height:40px;margin-bottom:6px}
+.say{margin:8px 0 0;font-size:.98rem}
+.empty{color:var(--muted);font-size:1rem;font-weight:500;padding:6px 0}
+.warnbox{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--warn-soft);color:var(--warn);font-size:.86rem}
+.info{margin:12px 0 0;padding:10px 12px;border-radius:10px;background:var(--accent-soft);font-size:.86rem}
+
+.tape-wrap{padding:0 10px;margin:18px 0 4px}
 .flags{position:relative;height:20px}
 .flag{position:absolute;bottom:0;font-size:.72rem;color:var(--muted);font-variant-numeric:tabular-nums;transform:translateX(-50%);white-space:nowrap}
 .flag::after{content:"";position:absolute;left:50%;top:100%;height:5px;border-left:1px dashed var(--muted)}
-.flag.end{transform:translateX(-100%);padding-right:0;color:var(--ink);font-weight:700}
+.flag.end{transform:translateX(-100%);color:var(--ink);font-weight:700}
 .flag.end::after{left:100%}
-.tape{position:relative;height:52px;background:var(--track);border-radius:4px;overflow:hidden}
+.tape{position:relative;height:48px;background:var(--track);border-radius:4px;overflow:hidden}
 .fill{position:absolute;left:0;top:0;bottom:0;background:var(--tape);width:0}
 @media (prefers-reduced-motion: no-preference){.fill{transition:width .35s ease}}
 .tick{position:absolute;bottom:0;width:0;border-left:1px solid var(--tape-ink);opacity:.75}
-.tick.minor{height:10px}
-.tick.mid{height:16px}
-.tick.major{height:26px;opacity:1}
+.tick.minor{height:9px}
+.tick.mid{height:15px}
+.tick.major{height:24px;opacity:1}
 .nums{position:relative;height:20px;margin-top:4px}
 .num{position:absolute;top:0;font-size:.72rem;color:var(--muted);transform:translateX(-50%);font-variant-numeric:tabular-nums}
 .num.first{transform:none}
-.unit{font-size:.75rem;color:var(--muted);text-align:right;margin:0}
-.vnote{margin:12px 0 0;font-size:.82rem;color:var(--muted)}
+.unit{font-size:.76rem;color:var(--muted);margin:0}
 
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:14px;border-top:1px solid var(--line)}
-.stat{padding:12px 8px 0 0}
+details.more{margin-top:12px;border-top:1px solid var(--line);padding-top:6px}
+details.more summary{cursor:pointer;font-size:.9rem;font-weight:500;color:var(--muted);min-height:36px;display:flex;align-items:center}
+details.more .body{padding-top:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr)}
+.stat{padding:4px 8px 0 0}
 .stat + .stat{padding-left:12px;border-left:1px solid var(--line)}
-.stat b{display:block;font-size:1.1rem;font-variant-numeric:tabular-nums}
+.stat b{display:block;font-size:1.05rem;font-variant-numeric:tabular-nums}
 .stat span{font-size:.75rem;color:var(--muted);line-height:1.3;display:block}
-
-h2{font-size:1.05rem;margin:0 0 4px}
-.panel > h2{margin-bottom:12px}
-.sub{margin:0 0 12px;color:var(--muted);font-size:.85rem}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
-th,td{text-align:left;padding:9px 0;border-top:1px solid var(--line);font-size:.95rem}
+th,td{text-align:left;padding:9px 0;border-top:1px solid var(--line);font-size:.95rem;vertical-align:top}
+tr:first-child th,tr:first-child td{border-top:0}
 th{font-weight:500}
 td{text-align:right;font-weight:700}
 td small{display:block;font-weight:400;color:var(--muted);font-size:.72rem}
 caption{display:none}
-details{margin:0}
-summary{cursor:pointer;font-weight:500;padding:4px 0;min-height:32px}
-details .body{padding-top:10px}
-details ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem}
-.btn{font:inherit;font-weight:700;font-size:.95rem;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:11px 16px;min-height:46px;cursor:pointer;width:100%}
-.btn.ghost{background:var(--surface);color:var(--ink);border:1px solid var(--line);margin-bottom:14px}
-.btn:active{transform:translateY(1px)}
-.note{font-size:.8rem;color:var(--muted);margin:16px 2px 0}
-.note code{font-family:inherit;background:var(--track);padding:1px 5px;border-radius:4px;font-variant-numeric:tabular-nums}
+ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem}
+.btn{font:inherit;font-weight:700;font-size:.95rem;background:var(--accent);color:var(--accent-ink);border:0;border-radius:10px;padding:11px 16px;min-height:46px;cursor:pointer;width:100%;margin-top:12px}
+
+.swapwrap{display:flex;justify-content:center;margin:-2px 0 10px}
+.swapbtn{font:inherit;font-size:.9rem;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 18px;min-height:42px;cursor:pointer}
+.swapbtn:hover{border-color:var(--accent)}
+
+.foot{margin-top:18px}
+.foot summary{cursor:pointer;font-size:.88rem;color:var(--muted);min-height:36px;display:flex;align-items:center}
+.foot p{font-size:.8rem;color:var(--muted);margin:6px 0 0}
+.foot code{font-family:inherit;background:var(--track);padding:1px 5px;border-radius:4px}
 @media (max-width:380px){.big{font-size:2.5rem}}
 </style>
 </head>
 <body>
 <main>
-  <h1>cm/360 감도 계산기</h1>
-  <p class="lead">마우스를 몇 cm 움직여야 화면이 한 바퀴(360°) 도는지 보고, 게임 사이 감도를 바꿔 볼 수 있어요.</p>
+  <h1>감도 계산기</h1>
+  <p class="lead">마우스를 몇 cm 움직여야 화면이 한 바퀴 도는지 알려주고, 같은 느낌 그대로 다른 게임으로 감도를 옮겨줘요.</p>
 
   <div class="seg tabs" role="radiogroup" aria-label="메뉴">
-    <input type="radio" name="tab" id="tab-calc" value="calc" checked><label for="tab-calc">cm/360 계산</label>
-    <input type="radio" name="tab" id="tab-conv" value="conv"><label for="tab-conv">게임 간 변환</label>
+    <input type="radio" name="tab" id="tab-calc" value="calc" checked><label for="tab-calc">내 감도 거리 보기</label>
+    <input type="radio" name="tab" id="tab-conv" value="conv"><label for="tab-conv">다른 게임으로 옮기기</label>
   </div>
 
-  <!-- ========== 탭 1: cm/360 계산 ========== -->
+  <!-- ===== 내 감도 거리 보기 ===== -->
   <div id="view-calc">
-    <section class="panel" aria-label="입력">
-      <div class="seg" role="radiogroup" aria-label="계산 방향">
-        <input type="radio" name="mode" id="mode-sens" value="sens" checked><label for="mode-sens">감도 → cm/360</label>
-        <input type="radio" name="mode" id="mode-cm" value="cm"><label for="mode-cm">cm/360 → 감도</label>
-      </div>
+    <section class="panel">
+      <h2 class="q">어떤 게임이에요?</h2>
+      <div class="games" id="pk-calc" role="radiogroup" aria-label="게임"></div>
 
-      <div class="field">
-        <label for="game">게임</label>
-        <select id="game"></select>
+      <div id="custom-calc" class="mt" hidden>
+        <div class="field">
+          <label for="yaw">이 게임의 yaw 값</label>
+          <input type="number" id="yaw" inputmode="decimal" step="any" min="0" placeholder="예: 0.022">
+          <p class="hint">yaw는 게임마다 정해진 회전 배율이에요. 모르면 아래에서 직접 재서 구할 수 있어요.</p>
+        </div>
+        <details class="more" id="calib">
+          <summary>직접 재서 yaw 구하기</summary>
+          <div class="body">
+            <ol>
+              <li>게임 감도를 아래 칸의 값으로 맞추고, 마우스 DPI는 아래 DPI 칸과 같게 둬요.</li>
+              <li>책상에 시작점을 표시하고, 화면이 정확히 한 바퀴 돌 때까지 마우스를 옮긴 거리를 자로 재요.</li>
+              <li>마우스 가속 설정은 꺼두세요.</li>
+            </ol>
+            <div class="row">
+              <div class="field">
+                <label for="c-sens">잴 때 쓴 감도</label>
+                <input type="number" id="c-sens" inputmode="decimal" step="any" min="0" placeholder="0.5">
+              </div>
+              <div class="field">
+                <label for="c-cm">한 바퀴 거리 (cm)</label>
+                <input type="number" id="c-cm" inputmode="decimal" step="any" min="0" placeholder="25">
+              </div>
+            </div>
+            <button class="btn" id="c-go" type="button">yaw 구해서 적용하기</button>
+            <p class="hint" id="c-msg"></p>
+          </div>
+        </details>
       </div>
+    </section>
 
-      <div class="field" id="yaw-field" hidden>
-        <label for="yaw">yaw (감도 1일 때 마우스 1카운트당 회전각, 도)</label>
-        <input type="number" id="yaw" inputmode="decimal" step="any" min="0" placeholder="예: 0.022">
-        <p class="hint">모르면 아래 ‘yaw 직접 측정’으로 구할 수 있어요.</p>
+    <section class="panel">
+      <div class="seg" role="radiogroup" aria-label="계산 방법">
+        <input type="radio" name="mode" id="mode-sens" value="sens" checked><label for="mode-sens">감도로 거리 보기</label>
+        <input type="radio" name="mode" id="mode-cm" value="cm"><label for="mode-cm">원하는 거리로 감도 찾기</label>
       </div>
 
       <div class="row">
@@ -144,199 +190,256 @@ details ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem
           <input type="number" id="dpi" inputmode="decimal" step="any" min="1" placeholder="800">
         </div>
         <div class="field" id="sens-field">
-          <label for="sens">게임 감도</label>
+          <label for="sens" id="sens-label">게임 감도</label>
           <input type="number" id="sens" inputmode="decimal" step="any" min="0" placeholder="1.0">
         </div>
         <div class="field" id="cm-field" hidden>
-          <label for="cm">원하는 cm/360</label>
+          <label for="cm">원하는 한 바퀴 거리 (cm)</label>
           <input type="number" id="cm" inputmode="decimal" step="any" min="0" placeholder="30">
         </div>
       </div>
-      <div class="chips" aria-label="DPI 빠른 선택" id="dpi-chips"></div>
+      <div class="chips" id="dpi-chips" aria-label="자주 쓰는 DPI"></div>
+      <p class="hint">DPI는 마우스 프로그램에서 확인할 수 있어요. 모르면 800으로 두세요.</p>
+      <p class="hint" id="sens-help" hidden></p>
 
-      <div class="field" id="rs-field" style="margin-top:14px" hidden>
-        <label for="rs">Roblox 감도 (Roblox 설정 메뉴의 마우스 감도)</label>
-        <input type="number" id="rs" inputmode="decimal" step="any" min="0" placeholder="1">
-        <p class="hint">팬텀포스는 Roblox 감도 × 게임 내 감도가 최종 감도예요. 위 ‘게임 감도’ 칸에는 팬텀포스 내부 설정 감도를 넣으세요.</p>
+      <div id="pf-calc" class="mt" hidden>
+        <div class="seg" id="cfix-seg" role="radiogroup" aria-label="팬텀포스에서 직접 정할 값">
+          <input type="radio" name="cfix" id="cfix-r" value="r" checked><label for="cfix-r">Roblox 감도를 정할게요</label>
+          <input type="radio" name="cfix" id="cfix-p" value="p"><label for="cfix-p">팬포 감도를 정할게요</label>
+        </div>
+        <div class="field" id="rs-field">
+          <label for="rs">Roblox 감도 (Camera Sensitivity 숫자)</label>
+          <input type="number" id="rs" inputmode="decimal" step="any" min="0" placeholder="1">
+        </div>
+        <div class="field" id="cps-field" hidden>
+          <label for="cps">팬텀포스 게임 내 감도</label>
+          <input type="number" id="cps" inputmode="decimal" step="any" min="0" placeholder="0.5">
+        </div>
+        <p class="hint">팬텀포스는 Roblox 감도와 게임 내 감도가 곱해져서 적용돼요.</p>
       </div>
     </section>
 
     <section class="panel result" aria-live="polite" aria-label="결과">
-      <p class="cap" id="cap"></p>
-      <div id="out"></div>
-
-      <div class="tape-wrap" id="tape-wrap" hidden>
-        <div class="flags" id="flags"></div>
-        <div class="tape" id="tape"><div class="fill" id="fill"></div></div>
-        <div class="nums" id="nums"></div>
-        <p class="unit">눈금 단위: cm (노란 부분이 마우스 이동 거리)</p>
+      <p class="cap" id="ccap"></p>
+      <div class="res-top">
+        <div id="cout"></div>
+        <button class="copy" id="c-copy" type="button" hidden>감도 복사</button>
       </div>
-
-      <div class="stats" id="stats" hidden>
-        <div class="stat"><b id="s-in">-</b><span>in/360<br>(인치 환산)</span></div>
-        <div class="stat"><b id="s-edpi">-</b><span>eDPI<br>(DPI × 감도)</span></div>
-        <div class="stat"><b id="s-deg">-</b><span>10cm 움직일 때<br>회전각</span></div>
-      </div>
-      <p class="vnote" id="vnote" hidden></p>
-    </section>
-
-    <section class="panel" id="calib-panel" hidden>
-      <details open>
-        <summary>yaw 직접 측정 (목록에 없는 게임)</summary>
-        <div class="body">
-          <ol>
-            <li>게임에서 감도를 아래 값으로 맞추고, 마우스 DPI는 위 칸과 같게 둬요.</li>
-            <li>마우스 시작점을 자나 눈금자로 표시하고, 정확히 한 바퀴(360°) 돌았을 때 이동한 거리를 재요.</li>
-            <li>재는 동안 마우스 가속 옵션은 꺼두세요.</li>
-          </ol>
-          <div class="row">
-            <div class="field">
-              <label for="c-sens">측정할 때 쓴 감도</label>
-              <input type="number" id="c-sens" inputmode="decimal" step="any" min="0" placeholder="0.5">
-            </div>
-            <div class="field">
-              <label for="c-cm">한 바퀴 이동 거리 (cm)</label>
-              <input type="number" id="c-cm" inputmode="decimal" step="any" min="0" placeholder="25">
-            </div>
-          </div>
-          <button class="btn" id="c-go" type="button">yaw 계산해서 적용</button>
-          <p class="hint" id="c-msg"></p>
+      <div id="cbody" hidden>
+        <p class="say" id="csay"></p>
+        <p class="warnbox" id="cwarn" hidden></p>
+        <div class="tape-wrap">
+          <div class="flags" id="flags"></div>
+          <div class="tape" id="tape"><div class="fill" id="fill"></div></div>
+          <div class="nums" id="nums"></div>
+          <p class="unit">노란 부분이 한 바퀴에 필요한 마우스 이동 거리예요 (단위 cm)</p>
         </div>
-      </details>
+        <p class="info" id="cinfo" hidden></p>
+        <details class="more">
+          <summary>자세히 보기</summary>
+          <div class="body stats">
+            <div class="stat"><b id="s-in">-</b><span>in/360<br>(인치)</span></div>
+            <div class="stat"><b id="s-edpi">-</b><span>eDPI<br>(DPI × 감도)</span></div>
+            <div class="stat"><b id="s-deg">-</b><span>마우스 10cm에<br>도는 각도</span></div>
+          </div>
+        </details>
+      </div>
     </section>
   </div>
 
-  <!-- ========== 탭 2: 게임 간 변환 ========== -->
+  <!-- ===== 다른 게임으로 옮기기 ===== -->
   <div id="view-conv" hidden>
-    <section class="panel" aria-label="지금 쓰는 설정">
-      <h2>지금 쓰는 설정</h2>
-      <div class="field">
-        <label for="fg">게임</label>
-        <select id="fg"></select>
-      </div>
-      <div class="field" id="fyaw-field" hidden>
-        <label for="fyaw">yaw (감도 1일 때 마우스 1카운트당 회전각, 도)</label>
+    <section class="panel">
+      <h2 class="q">지금 쓰는 감도</h2>
+      <div class="games" id="pk-from" role="radiogroup" aria-label="지금 쓰는 게임"></div>
+      <div class="field mt" id="fyaw-field" hidden>
+        <label for="fyaw">이 게임의 yaw 값</label>
         <input type="number" id="fyaw" inputmode="decimal" step="any" min="0" placeholder="예: 0.022">
-        <p class="hint">모르면 ‘cm/360 계산’ 탭의 ‘yaw 직접 측정’으로 구할 수 있어요.</p>
+        <p class="hint">모르면 ‘내 감도 거리 보기’ 메뉴의 ‘직접 재서 yaw 구하기’를 써 보세요.</p>
       </div>
-      <div class="row">
+      <div class="row mt">
         <div class="field">
           <label for="fdpi">마우스 DPI</label>
           <input type="number" id="fdpi" inputmode="decimal" step="any" min="1" placeholder="800">
         </div>
         <div class="field">
-          <label for="fsens">게임 감도</label>
+          <label for="fsens" id="fsens-label">게임 감도</label>
           <input type="number" id="fsens" inputmode="decimal" step="any" min="0" placeholder="1.0">
         </div>
       </div>
-      <div class="field" id="frs-field" style="margin-top:12px" hidden>
-        <label for="frs">Roblox 감도 (Roblox 설정 메뉴의 마우스 감도)</label>
+      <div class="chips" id="fdpi-chips" aria-label="자주 쓰는 DPI"></div>
+      <p class="hint" id="fsens-help" hidden></p>
+      <div class="field mt" id="frs-field" hidden>
+        <label for="frs">Roblox 감도 (Camera Sensitivity 숫자)</label>
         <input type="number" id="frs" inputmode="decimal" step="any" min="0" placeholder="1">
-        <p class="hint">위 ‘게임 감도’에는 팬텀포스 내부 설정 감도를 넣으세요. 최종 감도는 두 값을 곱해요.</p>
+        <p class="hint">팬텀포스는 Roblox 감도와 게임 내 감도가 곱해져서 적용돼요.</p>
       </div>
     </section>
 
-    <button class="btn ghost" id="swap" type="button">위아래 바꾸기 (결과를 기준으로)</button>
+    <div class="swapwrap"><button class="swapbtn" id="swap" type="button">⇅ 위아래 바꾸기</button></div>
 
-    <section class="panel" aria-label="변환할 게임">
-      <h2>변환할 게임</h2>
-      <div class="field">
-        <label for="tg">게임</label>
-        <select id="tg"></select>
-      </div>
-      <div class="field" id="tyaw-field" hidden>
-        <label for="tyaw">yaw (감도 1일 때 마우스 1카운트당 회전각, 도)</label>
+    <section class="panel">
+      <h2 class="q">어느 게임으로 옮길까요?</h2>
+      <div class="games" id="pk-to" role="radiogroup" aria-label="옮길 게임"></div>
+      <div class="field mt" id="tyaw-field" hidden>
+        <label for="tyaw">이 게임의 yaw 값</label>
         <input type="number" id="tyaw" inputmode="decimal" step="any" min="0" placeholder="예: 0.022">
       </div>
-      <div class="field">
-        <label for="tdpi">이 게임에서 쓸 마우스 DPI</label>
+      <label class="check"><input type="checkbox" id="same-dpi"> 위와 같은 DPI 쓰기</label>
+      <div class="field" id="tdpi-field" hidden>
+        <label for="tdpi">이 게임에서 쓸 DPI</label>
         <input type="number" id="tdpi" inputmode="decimal" step="any" min="1" placeholder="800">
       </div>
-      <div class="field" id="trs-field" hidden>
-        <label for="trs">Roblox 감도 (이 값을 기준으로 팬텀포스 내부 감도를 계산해요)</label>
-        <input type="number" id="trs" inputmode="decimal" step="any" min="0" placeholder="1">
-        <p class="hint">Roblox 감도를 바꾸면 결과로 나오는 팬텀포스 내부 감도도 같이 바뀌어요.</p>
+      <div id="tpf-box" class="mt" hidden>
+        <div class="seg" role="radiogroup" aria-label="팬텀포스에서 직접 정할 값">
+          <input type="radio" name="tfix" id="tfix-r" value="r" checked><label for="tfix-r">Roblox 감도를 정할게요</label>
+          <input type="radio" name="tfix" id="tfix-p" value="p"><label for="tfix-p">팬포 감도를 정할게요</label>
+        </div>
+        <div class="field" id="trs-field">
+          <label for="trs">Roblox 감도 (Camera Sensitivity 숫자)</label>
+          <input type="number" id="trs" inputmode="decimal" step="any" min="0" placeholder="1">
+        </div>
+        <div class="field" id="tps-field" hidden>
+          <label for="tps">팬텀포스 게임 내 감도</label>
+          <input type="number" id="tps" inputmode="decimal" step="any" min="0" placeholder="0.5">
+        </div>
+        <p class="hint" id="tpf-hint"></p>
       </div>
     </section>
 
     <section class="panel result" aria-live="polite" aria-label="변환 결과">
       <p class="cap" id="vcap"></p>
-      <div id="vout"></div>
-
-      <div class="tape-wrap" id="vtape-wrap" hidden>
-        <div class="flags" id="vflags"></div>
-        <div class="tape" id="vtape"><div class="fill" id="vfill"></div></div>
-        <div class="nums" id="vnums"></div>
-        <p class="unit">눈금 단위: cm (두 게임 모두 이만큼 움직이면 한 바퀴)</p>
+      <div class="res-top">
+        <div id="vout"></div>
+        <button class="copy" id="v-copy" type="button" hidden>감도 복사</button>
       </div>
-
-      <div class="stats" id="vstats" hidden>
-        <div class="stat"><b id="v-cm">-</b><span>cm/360<br>(마우스 이동 거리)</span></div>
-        <div class="stat"><b id="v-in">-</b><span>in/360<br>(인치 환산)</span></div>
-        <div class="stat"><b id="v-edpi">-</b><span>변환 게임 eDPI<br>(DPI × 감도)</span></div>
+      <div id="vbody" hidden>
+        <p class="say" id="vsay"></p>
+        <p class="warnbox" id="vwarn" hidden></p>
+        <div class="tape-wrap">
+          <div class="flags" id="vflags"></div>
+          <div class="tape" id="vtape"><div class="fill" id="vfill"></div></div>
+          <div class="nums" id="vnums"></div>
+          <p class="unit">두 게임 모두 노란 부분만큼 움직이면 한 바퀴 돌아요 (단위 cm)</p>
+        </div>
+        <p class="info" id="vinfo" hidden></p>
+        <details class="more">
+          <summary>다른 게임으로는 얼마일까요?</summary>
+          <div class="body">
+            <table><caption>게임별 같은 감도</caption><tbody id="vtable"></tbody></table>
+          </div>
+        </details>
+        <details class="more">
+          <summary>자세히 보기</summary>
+          <div class="body stats">
+            <div class="stat"><b id="v-cm">-</b><span>cm/360<br>(한 바퀴 거리)</span></div>
+            <div class="stat"><b id="v-in">-</b><span>in/360<br>(인치)</span></div>
+            <div class="stat"><b id="v-edpi">-</b><span>옮긴 게임 eDPI<br>(DPI × 감도)</span></div>
+          </div>
+        </details>
       </div>
-      <p class="vnote" id="vvnote" hidden></p>
-    </section>
-
-    <section class="panel" id="vtable-panel" hidden>
-      <h2>다른 게임에서도 같은 감도</h2>
-      <p class="sub">변환할 게임의 DPI 기준, 같은 cm/360이 되는 감도예요.</p>
-      <table>
-        <caption>게임별 환산 감도</caption>
-        <tbody id="vtable"></tbody>
-      </table>
     </section>
   </div>
 
-  <p class="note">계산식: <code>cm/360 = 360 × 2.54 ÷ (DPI × 감도 × yaw)</code>. yaw는 CS2·Apex 0.022, 발로란트 0.07, 오버워치 2 0.0066, Deadlock 0.044, Roblox 0.25, Phantom Forces 0.199를 사용해요. Roblox 값은 실측(감도 0.06, 1600 DPI에서 38.1cm)으로 역산한 거고, 세로 77%는 Roblox 카메라 입력 설정(가로 0.008727, 세로 0.006720)의 비율이에요. Phantom Forces는 게임 코드의 감도 식(감도 ÷ 144 라디안)과 Roblox 실측값으로 yaw를 구했고, Roblox 감도 × 게임 내 감도로 계산해요. 직접 재서 확인하면 더 정확해요.</p>
+  <details class="foot">
+    <summary>계산 방법과 값의 출처</summary>
+    <p>계산식은 <code>한 바퀴 거리(cm) = 360 × 2.54 ÷ (DPI × 감도 × yaw)</code>예요. yaw는 감도 1일 때 마우스가 한 칸 움직이면 도는 각도예요.</p>
+    <p>CS2·Apex 0.022, 발로란트 0.07, 오버워치 2 0.0066, Deadlock 0.044는 널리 쓰이는 값이에요. Roblox 0.25는 실측(감도 0.06, 1600 DPI에서 38.1cm)으로 구했고, 세로 감도가 가로의 77%인 건 Roblox 카메라 입력 설정(가로 0.008727, 세로 0.006720)에서 확인했어요.</p>
+    <p>팬텀포스 0.199는 게임 코드의 감도 식(감도 ÷ 144 라디안)과 Roblox 실측값으로 구한 값이고, Roblox 감도 × 게임 내 감도로 계산해요. 직접 재 보면 더 정확해요.</p>
+  </details>
 </main>
 
 <script>
 (function(){
   var K = 360 * 2.54;
   var GAMES = [
-    {id:'cs2',  name:'CS2 · CS:GO',        yaw:0.022},
-    {id:'apex', name:'Apex Legends',       yaw:0.022},
-    {id:'val',  name:'발로란트',            yaw:0.07},
-    {id:'ow2',  name:'오버워치 2',          yaw:0.0066},
-    {id:'dl',   name:'Deadlock',           yaw:0.044},
-    {id:'rbx',  name:'Roblox',             yaw:0.25, vr:0.77},
-    {id:'pf',   name:'Phantom Forces',     yaw:0.198944, note:'팬텀포스는 Roblox 감도 × 게임 내 감도가 최종 감도예요. 조준(ADS) 중에는 조준 감도 배율과 확대 배율만큼 더 느려지고, 여기 값은 비조준 기준이에요.'},
-    {id:'custom', name:'기타 · yaw 직접 입력', yaw:null}
+    {id:'rbx',  name:'Roblox',      yaw:0.25, vr:0.77, min:0.001, max:100},
+    {id:'pf',   name:'팬텀포스',     yaw:0.198944, min:0.0039, max:4},
+    {id:'cs2',  name:'CS2',         yaw:0.022},
+    {id:'val',  name:'발로란트',     yaw:0.07},
+    {id:'apex', name:'Apex',        yaw:0.022},
+    {id:'ow2',  name:'오버워치 2',   yaw:0.0066},
+    {id:'dl',   name:'Deadlock',    yaw:0.044},
+    {id:'custom', name:'기타 게임',  yaw:null}
   ];
   var KEY = 'cm360-state-v1';
   var state = {
     tab:'calc',
-    mode:'sens', game:'cs2', dpi:'800', sens:'1', cm:'30', yaw:'', csens:'', ccm:'', rsens:'1',
+    mode:'sens', game:'rbx', dpi:'1600', sens:'0.06', cm:'30', yaw:'', csens:'', ccm:'', rsens:'1', cfix:'r', cps:'0.5',
     fg:'rbx', fdpi:'1600', fsens:'0.06', fyaw:'', frs:'1',
-    tg:'pf',  tdpi:'1600', tyaw:'', trs:'1'
+    tg:'pf', tdpi:'1600', tsame:'1', tyaw:'', trs:'1', tps:'0.5', tfix:'r'
   };
-  try { var s0 = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s0) for (var k in s0) if (k in state) state[k] = s0[k]; } catch(e){}
-  var lastT = NaN;
+  try {
+    var s0 = JSON.parse(localStorage.getItem(KEY) || 'null');
+    if (s0) for (var k in s0) if (k in state) state[k] = s0[k];
+  } catch(e){}
+  if (!gameBy(state.game)) state.game = 'rbx';
+  if (!gameBy(state.fg)) state.fg = 'rbx';
+  if (!gameBy(state.tg)) state.tg = 'pf';
+  var lastT = NaN, calcCopy = '', convCopy = '';
 
   function $(id){ return document.getElementById(id); }
   function num(v){ var n = parseFloat(String(v).replace(',', '.')); return isFinite(n) ? n : NaN; }
   function fmt(n, d){ return Number(n.toFixed(d)).toString(); }
   function sig(n){ if (!isFinite(n)) return '-'; return Number(n.toPrecision(4)).toString(); }
   function save(){ try { localStorage.setItem(KEY, JSON.stringify(state)); } catch(e){} }
-  function gameBy(id){ return GAMES.filter(function(x){ return x.id === id; })[0]; }
+  function gameBy(id){ for (var i = 0; i < GAMES.length; i++) if (GAMES[i].id === id) return GAMES[i]; return null; }
   function baseYaw(id, customStr){ var g = gameBy(id); return g.yaw != null ? g.yaw : num(customStr); }
+  function show(id, on){ $(id).hidden = !on; }
 
-  ['game','fg','tg'].forEach(function(id){
-    var sel = $(id);
+  function sensLabel(id){
+    if (id === 'pf') return '팬텀포스 게임 내 감도';
+    if (id === 'rbx') return 'Roblox 감도';
+    if (id === 'custom') return '게임 감도';
+    return gameBy(id).name + ' 감도';
+  }
+  function sensHelp(id){
+    if (id === 'rbx') return 'Roblox 감도는 ESC → 설정 → Camera Sensitivity 옆 숫자 칸의 값이에요. 슬라이더 칸 수가 아니에요.';
+    if (id === 'pf') return '팬텀포스 설정 메뉴의 Mouse Sensitivity 값이에요.';
+    return '';
+  }
+  function setHelp(elId, gid){ var t = sensHelp(gid); $(elId).textContent = t; $(elId).hidden = !t; }
+  function rangeWarn(g, v){
+    if (g.min == null || (v >= g.min && v <= g.max)) return '';
+    return g.name + ' 설정에는 ' + g.min + '~' + g.max + ' 사이 값만 넣을 수 있어요. DPI를 바꾸면 범위 안으로 맞출 수 있어요.';
+  }
+  function setText(elId, txt){ $(elId).textContent = txt; $(elId).hidden = !txt; }
+  function showEmpty(outId, msg){
+    $(outId).innerHTML = '<div class="empty"></div>';
+    $(outId).firstChild.textContent = msg;
+  }
+  function bigHTML(val, unit){ return '<div class="big">' + val + (unit ? '<small>' + unit + '</small>' : '') + '</div>'; }
+
+  /* 게임 고르기 버튼 */
+  function makePicker(boxId, name, key){
+    var box = $(boxId), html = '';
     GAMES.forEach(function(g){
-      var o = document.createElement('option');
-      o.value = g.id; o.textContent = g.name; sel.appendChild(o);
+      var id = name + '-' + g.id;
+      html += '<input type="radio" name="' + name + '" id="' + id + '" value="' + g.id + '"><label for="' + id + '">' + g.name + '</label>';
     });
-  });
-  [400, 800, 1200, 1600, 3200].forEach(function(d){
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip'; b.textContent = d + ' DPI';
-    b.addEventListener('click', function(){ state.dpi = String(d); $('dpi').value = d; save(); render(); });
-    $('dpi-chips').appendChild(b);
-  });
+    box.innerHTML = html;
+    box.addEventListener('change', function(e){
+      if (e.target.name === name) { state[key] = e.target.value; save(); render(); }
+    });
+  }
+  function setPicker(name, val){ var el = $(name + '-' + val); if (el) el.checked = true; }
+  makePicker('pk-calc', 'gc', 'game');
+  makePicker('pk-from', 'gf', 'fg');
+  makePicker('pk-to', 'gt', 'tg');
 
-  /* 줄자 그리기: p 는 요소 id 접두사('' 또는 'v') */
+  function makeChips(boxId, inputId, key){
+    [400, 800, 1200, 1600, 3200].forEach(function(d){
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'chip'; b.textContent = d;
+      b.setAttribute('aria-label', d + ' DPI');
+      b.addEventListener('click', function(){ state[key] = String(d); $(inputId).value = d; save(); render(); });
+      $(boxId).appendChild(b);
+    });
+  }
+  makeChips('dpi-chips', 'dpi', 'dpi');
+  makeChips('fdpi-chips', 'fdpi', 'fdpi');
+
+  /* 줄자 */
   function renderTape(p, cm){
     var nice = [15,20,30,40,50,60,80,100,120,150,200,300,400,600,800,1000,1500,2000];
     var max = null;
@@ -367,135 +470,162 @@ details ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem
       '<span class="flag end" style="left:' + pos(cm) + '">360° ' + fmt(cm, 1) + '</span>';
   }
 
-  /* ---------- 탭 1 ---------- */
+  var PF_NOTE = '팬텀포스는 조준(우클릭) 중에는 게임의 조준 감도 설정과 배율만큼 더 느려져요. 여기 값은 조준하지 않을 때 기준이에요.';
+
+  /* ===== 내 감도 거리 보기 ===== */
   function renderCalc(){
-    var isCustom = state.game === 'custom';
-    var isPF = state.game === 'pf';
-    var mode = state.mode;
+    var g = gameBy(state.game), isPF = g.id === 'pf', isC = g.id === 'custom', mode = state.mode === 'cm' ? 'cm' : 'sens';
+    var cfixP = isPF && mode === 'cm' && state.cfix === 'p';
+    setPicker('gc', g.id);
     $('mode-' + mode).checked = true;
-    $('yaw-field').hidden = !isCustom;
-    $('calib-panel').hidden = !isCustom;
-    $('rs-field').hidden = !isPF;
-    $('sens-field').hidden = mode !== 'sens';
-    $('cm-field').hidden = mode !== 'cm';
+    show('custom-calc', isC);
+    show('sens-field', mode === 'sens');
+    show('cm-field', mode === 'cm');
+    $('sens-label').textContent = sensLabel(g.id);
+    setHelp('sens-help', isPF ? 'rbx' : (mode === 'sens' ? g.id : ''));
+    show('pf-calc', isPF);
+    show('cfix-seg', isPF && mode === 'cm');
+    show('rs-field', isPF && !cfixP);
+    show('cps-field', cfixP);
+    if (isPF && mode === 'cm') $('cfix-' + (cfixP ? 'p' : 'r')).checked = true;
 
-    var rs = num(state.rsens);
-    var yaw = baseYaw(state.game, state.yaw);
-    if (isPF) yaw = rs > 0 ? yaw * rs : NaN;
-    var dpi = num(state.dpi);
-    var sens = num(state.sens);
-    var cmIn = num(state.cm);
-    var out = $('out');
+    var yaw = baseYaw(g.id, state.yaw), dpi = num(state.dpi), sens = num(state.sens), cmIn = num(state.cm);
+    var rs = num(state.rsens), cps = num(state.cps);
+    var why =
+      !(yaw > 0) ? '기타 게임은 위에 yaw 값을 넣거나 직접 재서 구해주세요.' :
+      !(dpi > 0) ? '마우스 DPI를 넣어주세요.' :
+      (mode === 'sens' && !(sens > 0)) ? sensLabel(g.id) + '를 넣어주세요.' :
+      (mode === 'cm' && !(cmIn > 0)) ? '원하는 한 바퀴 거리(cm)를 넣어주세요.' :
+      (isPF && !cfixP && !(rs > 0)) ? 'Roblox 감도를 넣어주세요.' :
+      (cfixP && !(cps > 0)) ? '팬텀포스 게임 내 감도를 넣어주세요.' : '';
 
-    var ok = yaw > 0 && dpi > 0 && (mode === 'sens' ? sens > 0 : cmIn > 0);
-    $('tape-wrap').hidden = !ok;
-    $('stats').hidden = !ok;
+    show('cbody', !why);
+    if (why) { $('ccap').textContent = '결과'; showEmpty('cout', why); show('c-copy', false); calcCopy = ''; return; }
 
-    if (!ok) {
-      $('cap').textContent = '결과';
-      var why = (isPF && !(rs > 0)) ? 'Roblox 감도를 입력하세요.' :
-                !(yaw > 0) ? 'yaw 값을 입력하거나 아래에서 측정하세요.' :
-                !(dpi > 0) ? 'DPI를 입력하세요.' :
-                (mode === 'sens' ? '게임 감도를 입력하세요.' : '원하는 cm/360을 입력하세요.');
-      out.innerHTML = '<div class="empty"></div>';
-      out.firstChild.textContent = why;
-      $('vnote').hidden = true;
-      return;
-    }
-
-    var cm360, sensOut;
+    var cm360, edpi, warn = '';
     if (mode === 'sens') {
-      cm360 = K / (dpi * sens * yaw);
-      sensOut = sens;
-      $('cap').textContent = '마우스 이동 거리';
-      out.innerHTML = '<div class="big">' + sig(cm360) + '<small>cm / 360°</small></div>';
+      var eff = sens * (isPF ? rs : 1);
+      cm360 = K / (dpi * eff * yaw);
+      edpi = dpi * eff;
+      $('ccap').textContent = '한 바퀴 거리';
+      $('cout').innerHTML = bigHTML(sig(cm360), 'cm');
+      $('csay').textContent = '마우스를 ' + fmt(cm360, 1) + 'cm 움직이면 화면이 한 바퀴(360°) 돌아요.';
+      show('c-copy', false); calcCopy = '';
     } else {
       cm360 = cmIn;
-      sensOut = K / (dpi * cmIn * yaw);
-      $('cap').textContent = isPF ? '필요한 팬텀포스 내부 감도' : '필요한 게임 감도';
-      out.innerHTML = '<div class="big">' + sig(sensOut) + '<small>감도</small></div>';
+      var P = K / (dpi * cm360 * yaw), val;
+      edpi = dpi * P;
+      if (cfixP) {
+        val = P / cps;
+        $('ccap').textContent = '맞춰야 할 Roblox 감도';
+        $('csay').textContent = '팬텀포스 게임 내 감도를 ' + sig(cps) + '로 두고, Roblox 감도를 이 값으로 맞추세요.';
+        warn = rangeWarn(gameBy('rbx'), val);
+      } else if (isPF) {
+        val = P / rs;
+        $('ccap').textContent = '맞춰야 할 팬텀포스 게임 내 감도';
+        $('csay').textContent = 'Roblox 감도를 ' + sig(rs) + '로 두고, 팬텀포스 게임 내 감도를 이 값으로 맞추세요.';
+        warn = rangeWarn(g, val);
+      } else {
+        val = P;
+        $('ccap').textContent = '맞춰야 할 ' + sensLabel(g.id);
+        $('csay').textContent = '이 감도로 맞추면 마우스를 ' + fmt(cm360, 1) + 'cm 움직일 때 한 바퀴 돌아요.';
+        warn = rangeWarn(g, val);
+      }
+      $('cout').innerHTML = bigHTML(sig(val), '');
+      calcCopy = sig(val); show('c-copy', true);
     }
-
+    setText('cwarn', warn);
     renderTape('', cm360);
     $('s-in').textContent = fmt(cm360 / 2.54, 2);
-    $('s-edpi').textContent = sig(dpi * sensOut * (isPF ? rs : 1));
+    $('s-edpi').textContent = sig(edpi);
     $('s-deg').textContent = fmt(10 / cm360 * 360, 1) + '°';
 
-    var gnow = gameBy(state.game);
-    var msgs = [];
-    if (gnow.vr && gnow.vr !== 1) {
-      msgs.push('세로 감도는 가로의 ' + Math.round(gnow.vr * 100) + '%예요(가로보다 ' + Math.round((1 - gnow.vr) * 100) + '% 낮음). 세로로 360° 도는 데는 ' + fmt(cm360 / gnow.vr, 1) + 'cm가 필요해요.');
-    }
-    if (gnow.note) msgs.push(gnow.note);
-    $('vnote').textContent = msgs.join(' ');
-    $('vnote').hidden = msgs.length === 0;
+    var info = [];
+    if (g.vr) info.push('Roblox는 세로(위아래) 감도가 가로보다 ' + Math.round((1 - g.vr) * 100) + '% 낮게 들어가요. 그래서 세로로 한 바퀴를 돌리려면 ' + fmt(cm360 / g.vr, 1) + 'cm가 필요해요.');
+    if (isPF) info.push(PF_NOTE);
+    setText('cinfo', info.join(' '));
   }
 
-  /* ---------- 탭 2 ---------- */
+  /* ===== 다른 게임으로 옮기기 ===== */
   function renderConv(){
-    var fPF = state.fg === 'pf', tPF = state.tg === 'pf';
-    $('fyaw-field').hidden = state.fg !== 'custom';
-    $('tyaw-field').hidden = state.tg !== 'custom';
-    $('frs-field').hidden = !fPF;
-    $('trs-field').hidden = !tPF;
+    var fg = gameBy(state.fg), tg = gameBy(state.tg);
+    var fPF = fg.id === 'pf', tPF = tg.id === 'pf', tFixP = tPF && state.tfix === 'p', same = state.tsame === '1';
+    setPicker('gf', fg.id); setPicker('gt', tg.id);
+    show('fyaw-field', fg.id === 'custom');
+    show('tyaw-field', tg.id === 'custom');
+    show('frs-field', fPF);
+    $('fsens-label').textContent = sensLabel(fg.id);
+    setHelp('fsens-help', fPF ? 'rbx' : fg.id);
+    $('same-dpi').checked = same;
+    show('tdpi-field', !same);
+    show('tpf-box', tPF);
+    show('trs-field', !tFixP);
+    show('tps-field', tFixP);
+    if (tPF) $('tfix-' + (tFixP ? 'p' : 'r')).checked = true;
+    $('tpf-hint').textContent = tFixP
+      ? '정한 팬텀포스 감도에 맞는 Roblox 감도를 알려드려요.'
+      : '정한 Roblox 감도에 맞는 팬텀포스 감도를 알려드려요.';
 
-    var fy = baseYaw(state.fg, state.fyaw), ty = baseYaw(state.tg, state.tyaw);
-    var frs = fPF ? num(state.frs) : 1, trs = tPF ? num(state.trs) : 1;
-    var fdpi = num(state.fdpi), tdpi = num(state.tdpi), fs = num(state.fsens);
-    var ok = fy > 0 && ty > 0 && frs > 0 && trs > 0 && fdpi > 0 && tdpi > 0 && fs > 0;
-    $('vtape-wrap').hidden = !ok;
-    $('vstats').hidden = !ok;
-    $('vtable-panel').hidden = !ok;
-    var out = $('vout');
+    var fy = baseYaw(fg.id, state.fyaw), ty = baseYaw(tg.id, state.tyaw);
+    var frs = fPF ? num(state.frs) : 1, trs = tPF && !tFixP ? num(state.trs) : 1, tps = num(state.tps);
+    var fdpi = num(state.fdpi), tdpi = same ? fdpi : num(state.tdpi), fs = num(state.fsens);
+    var why =
+      !(fy > 0) ? '지금 게임의 yaw 값을 넣어주세요.' :
+      !(fdpi > 0) ? '마우스 DPI를 넣어주세요.' :
+      !(fs > 0) ? '지금 쓰는 ' + sensLabel(fg.id) + '를 넣어주세요.' :
+      !(frs > 0) ? '지금 쓰는 Roblox 감도를 넣어주세요.' :
+      !(ty > 0) ? '옮길 게임의 yaw 값을 넣어주세요.' :
+      !(tdpi > 0) ? '옮길 게임에서 쓸 DPI를 넣어주세요.' :
+      (tFixP && !(tps > 0)) ? '팬텀포스 게임 내 감도를 넣어주세요.' :
+      (!tFixP && !(trs > 0)) ? 'Roblox 감도를 넣어주세요.' : '';
 
-    if (!ok) {
-      lastT = NaN;
-      $('vcap').textContent = '결과';
-      var why = !(fy > 0) ? '지금 쓰는 게임의 yaw를 입력하세요.' :
-                !(fdpi > 0) ? '지금 쓰는 DPI를 입력하세요.' :
-                !(fs > 0) ? '지금 쓰는 게임 감도를 입력하세요.' :
-                !(frs > 0) ? '지금 쓰는 Roblox 감도를 입력하세요.' :
-                !(ty > 0) ? '변환할 게임의 yaw를 입력하세요.' :
-                !(tdpi > 0) ? '변환할 게임의 DPI를 입력하세요.' :
-                '변환할 쪽 Roblox 감도를 입력하세요.';
-      out.innerHTML = '<div class="empty"></div>';
-      out.firstChild.textContent = why;
-      $('vvnote').hidden = true;
-      return;
-    }
+    show('vbody', !why);
+    if (why) { lastT = NaN; $('vcap').textContent = '결과'; showEmpty('vout', why); show('v-copy', false); convCopy = ''; return; }
 
     var cm360 = K / (fdpi * fs * fy * frs);
-    var ts = K / (tdpi * cm360 * ty * trs);
+    var P = K / (tdpi * cm360 * ty);
+    var ts, warn;
+    if (tFixP) {
+      ts = P / tps;
+      $('vcap').textContent = '맞춰야 할 Roblox 감도';
+      $('vsay').textContent = '팬텀포스 게임 내 감도를 ' + sig(tps) + '로 두고, Roblox 감도를 이 값으로 맞추면 지금과 같은 느낌이에요.';
+      warn = rangeWarn(gameBy('rbx'), ts);
+    } else if (tPF) {
+      ts = P / trs;
+      $('vcap').textContent = '맞춰야 할 팬텀포스 게임 내 감도';
+      $('vsay').textContent = 'Roblox 감도를 ' + sig(trs) + '로 두고, 팬텀포스 게임 내 감도를 이 값으로 맞추면 지금과 같은 느낌이에요.';
+      warn = rangeWarn(tg, ts);
+    } else {
+      ts = P;
+      $('vcap').textContent = '맞춰야 할 ' + sensLabel(tg.id);
+      $('vsay').textContent = '이 값으로 맞추면 지금처럼 마우스를 ' + fmt(cm360, 1) + 'cm 움직일 때 한 바퀴 돌아요.';
+      warn = rangeWarn(tg, ts);
+    }
     lastT = ts;
-
-    $('vcap').textContent = gameBy(state.tg).name + (tPF ? ' 내부 감도' : ' 감도');
-    out.innerHTML = '<div class="big">' + sig(ts) + '<small>' + (tPF ? '게임 내 감도' : '감도') + '</small></div>' +
-      (tPF ? '<p class="hint">Roblox 감도 ' + sig(trs) + ' 기준이에요.</p>' : '');
+    $('vout').innerHTML = bigHTML(sig(ts), '');
+    convCopy = sig(ts); show('v-copy', true);
+    setText('vwarn', warn);
 
     renderTape('v', cm360);
     $('v-cm').textContent = fmt(cm360, 2);
     $('v-in').textContent = fmt(cm360 / 2.54, 2);
-    $('v-edpi').textContent = sig(tdpi * ts * trs);
+    $('v-edpi').textContent = sig(tdpi * P);
 
-    var msgs = [];
-    [state.fg, state.tg].forEach(function(id, i){
-      if (i === 1 && id === state.fg) return;
-      var g = gameBy(id);
-      if (g.vr && g.vr !== 1) {
-        msgs.push(g.name + '는 세로 감도가 가로의 ' + Math.round(g.vr * 100) + '%예요. 변환은 가로 기준이라, 세로가 같은 비율이 아닌 게임과는 세로 느낌이 달라질 수 있어요.');
-      }
-      if (g.note) msgs.push(g.note);
+    var info = [], seen = {};
+    [fg, tg].forEach(function(g){
+      if (seen[g.id]) return; seen[g.id] = 1;
+      if (g.vr) info.push('Roblox는 세로(위아래) 감도가 가로보다 ' + Math.round((1 - g.vr) * 100) + '% 낮아요. 여기 계산은 가로(좌우) 기준이라 세로 느낌은 조금 다를 수 있어요.');
+      if (g.id === 'pf') info.push(PF_NOTE);
     });
-    $('vvnote').textContent = msgs.join(' ');
-    $('vvnote').hidden = msgs.length === 0;
+    setText('vinfo', info.join(' '));
 
-    var tRsOther = num(state.trs); if (!(tRsOther > 0)) tRsOther = 1;
+    var rsT = num(state.trs); if (!(rsT > 0)) rsT = 1;
     var rows = '';
     GAMES.forEach(function(g){
-      if (g.yaw == null || g.id === state.tg) return;
-      var s = K / (tdpi * cm360 * g.yaw * (g.id === 'pf' ? tRsOther : 1));
-      var tag = g.vr ? '<small>세로 ' + Math.round(g.vr * 100) + '%</small>' :
-                (g.id === 'pf' ? '<small>게임 내 감도 · Roblox 감도 ' + sig(tRsOther) + ' 기준</small>' : '');
+      if (g.yaw == null || g.id === tg.id) return;
+      var s = K / (tdpi * cm360 * g.yaw * (g.id === 'pf' ? rsT : 1));
+      var tag = g.vr ? '<small>세로는 77%</small>' :
+                (g.id === 'pf' ? '<small>게임 내 감도 · Roblox 감도 ' + sig(rsT) + ' 기준</small>' : '');
       rows += '<tr><th scope="row">' + g.name + '</th><td>' + sig(s) + tag + '</td></tr>';
     });
     $('vtable').innerHTML = rows;
@@ -504,59 +634,75 @@ details ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem
   function render(){
     var tab = state.tab === 'conv' ? 'conv' : 'calc';
     $('tab-' + tab).checked = true;
-    $('view-calc').hidden = tab !== 'calc';
-    $('view-conv').hidden = tab !== 'conv';
+    show('view-calc', tab === 'calc');
+    show('view-conv', tab === 'conv');
     renderCalc();
     renderConv();
   }
 
-  function bind(id, key){
-    var el = $(id);
-    el.value = state[key];
-    el.addEventListener('input', function(){ state[key] = el.value; save(); render(); });
-  }
-  bind('dpi', 'dpi'); bind('sens', 'sens'); bind('cm', 'cm'); bind('yaw', 'yaw'); bind('rs', 'rsens');
-  bind('c-sens', 'csens'); bind('c-cm', 'ccm');
-  bind('fdpi', 'fdpi'); bind('fsens', 'fsens'); bind('fyaw', 'fyaw'); bind('frs', 'frs');
-  bind('tdpi', 'tdpi'); bind('tyaw', 'tyaw'); bind('trs', 'trs');
+  /* 입력 연결 */
+  var INPUTS = [
+    ['dpi','dpi'],['sens','sens'],['cm','cm'],['yaw','yaw'],['rs','rsens'],['cps','cps'],['c-sens','csens'],['c-cm','ccm'],
+    ['fdpi','fdpi'],['fsens','fsens'],['fyaw','fyaw'],['frs','frs'],
+    ['tdpi','tdpi'],['tyaw','tyaw'],['trs','trs'],['tps','tps']
+  ];
+  function syncInputs(){ INPUTS.forEach(function(p){ $(p[0]).value = state[p[1]]; }); }
+  INPUTS.forEach(function(p){
+    $(p[0]).addEventListener('input', function(){ state[p[1]] = $(p[0]).value; save(); render(); });
+  });
+  syncInputs();
 
-  [['game','game'],['fg','fg'],['tg','tg']].forEach(function(p){
-    var sel = $(p[0]);
-    sel.value = state[p[1]];
-    sel.addEventListener('change', function(){ state[p[1]] = sel.value; save(); render(); });
-  });
-  Array.prototype.slice.call(document.querySelectorAll('input[name=mode]')).forEach(function(r){
-    r.addEventListener('change', function(){ if (r.checked) { state.mode = r.value; save(); render(); } });
-  });
-  Array.prototype.slice.call(document.querySelectorAll('input[name=tab]')).forEach(function(r){
-    r.addEventListener('change', function(){ if (r.checked) { state.tab = r.value; save(); render(); } });
+  function radios(name, key){
+    Array.prototype.slice.call(document.querySelectorAll('input[name=' + name + ']')).forEach(function(r){
+      r.addEventListener('change', function(){ if (r.checked) { state[key] = r.value; save(); render(); } });
+    });
+  }
+  radios('tab', 'tab'); radios('mode', 'mode'); radios('cfix', 'cfix'); radios('tfix', 'tfix');
+
+  $('same-dpi').addEventListener('change', function(){
+    if (!$('same-dpi').checked && !(num(state.tdpi) > 0)) { state.tdpi = state.fdpi; $('tdpi').value = state.tdpi; }
+    state.tsame = $('same-dpi').checked ? '1' : '0'; save(); render();
   });
 
   $('swap').addEventListener('click', function(){
+    var pfP = state.tg === 'pf' && state.tfix === 'p';
+    var lt = isFinite(lastT) ? String(Number(lastT.toPrecision(5))) : null;
     var f = {g:state.fg, dpi:state.fdpi, yaw:state.fyaw, rs:state.frs};
-    state.fg = state.tg; state.fdpi = state.tdpi; state.fyaw = state.tyaw; state.frs = state.trs;
-    if (isFinite(lastT)) state.fsens = String(Number(lastT.toPrecision(5)));
-    state.tg = f.g; state.tdpi = f.dpi; state.tyaw = f.yaw; state.trs = f.rs;
-    $('fg').value = state.fg; $('tg').value = state.tg;
-    $('fdpi').value = state.fdpi; $('fsens').value = state.fsens; $('fyaw').value = state.fyaw; $('frs').value = state.frs;
-    $('tdpi').value = state.tdpi; $('tyaw').value = state.tyaw; $('trs').value = state.trs;
-    save(); render();
+    var tdpiNow = state.tsame === '1' ? state.fdpi : state.tdpi;
+    state.fg = state.tg; state.fdpi = tdpiNow; state.fyaw = state.tyaw; state.frs = state.trs;
+    if (pfP) { state.fsens = state.tps; if (lt) state.frs = lt; }
+    else if (lt) state.fsens = lt;
+    state.tg = f.g; state.tdpi = f.dpi; state.tyaw = f.yaw; state.trs = f.rs; state.tfix = 'r';
+    syncInputs(); save(); render();
   });
+
+  function copyText(v, btn){
+    if (!v) return;
+    function done(){ btn.textContent = '복사했어요'; setTimeout(function(){ btn.textContent = '감도 복사'; }, 1500); }
+    function fallback(){
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = v; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        done();
+      } catch(e) { btn.textContent = v; }
+    }
+    try { navigator.clipboard.writeText(v).then(done, fallback); } catch(e) { fallback(); }
+  }
+  $('c-copy').addEventListener('click', function(){ copyText(calcCopy, $('c-copy')); });
+  $('v-copy').addEventListener('click', function(){ copyText(convCopy, $('v-copy')); });
 
   $('c-go').addEventListener('click', function(){
     var dpi = num(state.dpi), s = num(state.csens), c = num(state.ccm);
     var msg = $('c-msg');
-    msg.classList.remove('warn');
     if (!(dpi > 0) || !(s > 0) || !(c > 0)) {
-      msg.classList.add('warn');
-      msg.textContent = 'DPI, 측정할 때 쓴 감도, 이동 거리를 모두 입력하세요.';
+      msg.textContent = 'DPI, 잴 때 쓴 감도, 한 바퀴 거리를 모두 넣어주세요.';
       return;
     }
-    var y = K / (dpi * s * c);
-    state.yaw = String(Number(y.toPrecision(5)));
+    state.yaw = String(Number((K / (dpi * s * c)).toPrecision(5)));
     $('yaw').value = state.yaw;
     save(); render();
-    msg.textContent = 'yaw ' + state.yaw + '(으)로 적용했어요. 측정이 정확할수록 결과도 정확해요.';
+    msg.textContent = 'yaw를 ' + state.yaw + '로 적용했어요.';
   });
 
   render();
