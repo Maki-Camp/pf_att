@@ -344,8 +344,8 @@ ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem}
   <details class="foot">
     <summary>계산 방법과 값의 출처</summary>
     <p>계산식은 <code>한 바퀴 거리(cm) = 360 × 2.54 ÷ (DPI × 감도 × yaw)</code>예요. yaw는 감도 1일 때 마우스가 한 칸 움직이면 도는 각도예요.</p>
-    <p>CS2·Apex 0.022, 발로란트 0.07, 오버워치 2 0.0066, Deadlock 0.044는 널리 쓰이는 값이에요. Roblox 0.25는 실측(감도 0.06, 1600 DPI에서 38.1cm)으로 구했고, 세로 감도가 가로의 77%인 건 Roblox 카메라 입력 설정(가로 0.008727, 세로 0.006720)에서 확인했어요.</p>
-    <p>팬텀포스 0.199는 게임 코드의 감도 식(감도 ÷ 144 라디안)과 Roblox 실측값으로 구한 값이고, Roblox 감도 × 게임 내 감도로 계산해요. 직접 재 보면 더 정확해요.</p>
+    <p>CS2·Apex 0.022, 발로란트 0.07, 오버워치 2 0.0066, Deadlock 0.044는 널리 쓰이는 값이에요. Roblox 0.5는 Roblox 카메라 입력 설정(가로 0.008727 라디안 = 0.5°)에서 나온 값이고, 실측(감도 0.03, 1600 DPI에서 38.1cm)과도 맞아요. 세로 감도가 가로의 77%인 건 같은 설정의 세로 값(0.006720)에서 확인했어요.</p>
+    <p>팬텀포스 0.398은 게임 코드의 감도 식(감도 ÷ 144 라디안)을 그대로 옮긴 값이고, Roblox 감도 × 게임 내 감도로 계산해요.</p>
   </details>
 </main>
 
@@ -353,8 +353,8 @@ ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem}
 (function(){
   var K = 360 * 2.54;
   var GAMES = [
-    {id:'rbx',  name:'Roblox',      yaw:0.25, vr:0.77, min:0.001, max:100},
-    {id:'pf',   name:'팬텀포스',     yaw:0.198944, min:0.0039, max:4},
+    {id:'rbx',  name:'Roblox',      yaw:0.5, vr:0.77, min:0.001, max:100},
+    {id:'pf',   name:'팬텀포스',     yaw:0.397887, min:0.0039, max:4},
     {id:'cs2',  name:'CS2',         yaw:0.022},
     {id:'val',  name:'발로란트',     yaw:0.07},
     {id:'apex', name:'Apex',        yaw:0.022},
@@ -365,8 +365,8 @@ ol{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.88rem}
   var KEY = 'cm360-state-v1';
   var state = {
     tab:'calc',
-    mode:'sens', game:'rbx', dpi:'1600', sens:'0.06', cm:'30', yaw:'', csens:'', ccm:'', rsens:'1', cfix:'r', cps:'0.5',
-    fg:'rbx', fdpi:'1600', fsens:'0.06', fyaw:'', frs:'1',
+    mode:'sens', game:'rbx', dpi:'1600', sens:'0.03', cm:'30', yaw:'', csens:'', ccm:'', rsens:'1', cfix:'r', cps:'0.5',
+    fg:'rbx', fdpi:'1600', fsens:'0.03', fyaw:'', frs:'1',
     tg:'pf', tdpi:'1600', tsame:'1', tyaw:'', trs:'1', tps:'0.5', tfix:'r'
   };
   try {
