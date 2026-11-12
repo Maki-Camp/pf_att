@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0a1421"><title>RBXM 3D Map Viewer · 관통 판정 디버그</title>
+<html lang="ko"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0a1421"><title>RBXM 3D Map Viewer · Explorer + Properties</title>
 <style>
 :root{color-scheme:dark;--bg:#0b1622;--card:rgba(13,26,40,.91);--border:#324658;--txt:#e9f5ff;--muted:#a5b9ca;--a:#4de7c9;--yellow:#ffd266}
 *{box-sizing:border-box}body,html{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,'Noto Sans KR',sans-serif}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--a);outline-offset:2px}
@@ -51,9 +51,38 @@
 .spawn-count{font-size:11px;color:#b8d0d7;margin:5px 0 9px;line-height:1.5}
 .spawn-controls{padding:9px 10px;background:#0f2938;border:1px solid #34566b;border-radius:10px;margin:7px 0}
 .spawn-controls .checkline{padding:4px 0}
+
+/* Explorer + Properties: read-only local RBXM browser */
+#inspector{position:fixed;right:16px;top:73px;bottom:14px;width:340px;z-index:8;background:#0b1a2af2;border:1px solid #466174;border-radius:16px;box-shadow:0 20px 70px #0009;display:flex;flex-direction:column;overflow:hidden;backdrop-filter:blur(12px)}
+#inspector.hidden{display:none}
+.inspector-head{padding:13px 13px 9px;border-bottom:1px solid #344c60;background:#102b3c;display:flex;align-items:center;justify-content:space-between;gap:8px}
+.inspector-title{font-size:13px;font-weight:850;color:#e7fbff}.inspector-sub{font-size:10px;color:#9cb8c7;margin-top:2px}
+#inspectorClose{border:1px solid #466174;border-radius:7px;background:#17374c;color:#eaf5ff;padding:5px 9px}
+.inspect-options{display:flex;align-items:center;gap:8px;padding:8px 12px;font-size:11px;color:#c8dce8;flex-wrap:wrap;border-bottom:1px solid #2f4659}
+.inspect-options input{accent-color:#67e3cf}#inspectPick{margin-right:2px}
+#inspectSearch{background:#112b3e;color:#fff;border:1px solid #39566b;outline:none;padding:9px 10px;border-radius:8px;width:calc(100% - 24px);margin:10px 12px 3px;font-size:12px}
+#treeInfo{font-size:10px;color:#94b4c6;margin:3px 13px 7px}
+#sceneTree{height:43%;min-height:130px;overflow:auto;border-block:1px solid #304a5e;padding:5px 2px 9px;overscroll-behavior:contain}
+.tree-row{display:flex;align-items:center;gap:3px;min-height:27px;padding:2px 6px;cursor:pointer;border-radius:5px;font-size:11px;white-space:nowrap;color:#d4e4ee}
+.tree-row:hover{background:#1f4354}.tree-row.selected{background:#1b6765;color:#eafffa}
+.tree-arrow{width:19px;min-width:19px;background:none;border:0;color:#a7bfcc;padding:3px;font-size:12px}
+.tree-icon{font-size:12px;opacity:.9;margin-right:3px}.tree-name{overflow:hidden;text-overflow:ellipsis}.tree-class{font-size:9px;color:#8eabbc;margin-left:auto;padding-left:7px}
+.tree-more{color:#73e0d1;border:1px dashed #356471;background:#143344;border-radius:6px;padding:6px 9px;margin:4px 6px;cursor:pointer;font-size:10px}
+#propertiesTitle{font-size:12px;font-weight:850;color:#d7f5f0;padding:11px 12px 7px;border-bottom:1px solid #294355}
+#propertyScroll{flex:1;overflow:auto;overscroll-behavior:contain;padding:8px 12px 12px;min-height:110px}
+.prop-row{display:grid;grid-template-columns:100px minmax(0,1fr);gap:9px;padding:7px 3px;border-bottom:1px solid #253c4d;font-size:11px;line-height:1.35}
+.prop-row .prop-name{color:#91acbb;overflow-wrap:anywhere}.prop-row .prop-value{color:#e6f3f7;overflow-wrap:anywhere;white-space:pre-wrap;user-select:text;font-variant-numeric:tabular-nums}
+.prop-section{font-size:10px;font-weight:800;color:#62e0cb;margin:13px 0 4px;letter-spacing:.08em}
+.inspect-actions{display:flex;gap:7px;padding:10px 12px;border-top:1px solid #344c60;background:#102637}.inspect-actions button{flex:1;background:#1e4557;border:1px solid #41667a;border-radius:8px;padding:8px;color:#e8ffff;font-size:11px}
+.inspect-actions button:disabled{opacity:.4}
+#inspectorToggle{border-color:#4c9e98}
+body.inspector-open #measureBox{right:368px;top:84px}
+body.inspector-open #stats{display:none}
+@media(max-width:1200px){body.inspector-open #measureBox{right:auto;left:332px;top:78px;width:240px}}
+@media(max-width:750px){#inspector{right:6px;top:58px;bottom:8px;width:min(350px,calc(100vw - 12px))}#sceneTree{height:40%}body.inspector-open #measureBox{left:7px;right:auto;top:auto;bottom:100px;width:160px}body.inspector-open #measureBox:not(.is-collapsed){display:none}body.inspector-open #measureTouch{display:none}#top .topright{gap:4px}#inspectorToggle{padding:7px 8px}#inspector .prop-row{grid-template-columns:94px minmax(0,1fr)}}
 </style></head><body>
 <canvas id="view"></canvas><canvas id="measureCanvas" aria-hidden="true"></canvas>
-<div id="top"><div class="logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 22 7 12 12 2 7 12 2Zm-10 5v10l10 5 10-5V7M12 12v10"/></svg><div>RBXM 3D MAP VIEWER<small>비공식 뷰어 · LOCAL FILES</small></div></div><div class="topright"><span id="fps" class="btn" style="pointer-events:none">— FPS</span><button id="resetBtn" class="btn">전체 보기 H</button><button id="panelBtn" class="btn primary">☰ 설정</button></div></div>
+<div id="top"><div class="logo"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2 22 7 12 12 2 7 12 2Zm-10 5v10l10 5 10-5V7M12 12v10"/></svg><div>RBXM 3D MAP VIEWER<small>비공식 뷰어 · LOCAL FILES</small></div></div><div class="topright"><span id="fps" class="btn" style="pointer-events:none">— FPS</span><button id="resetBtn" class="btn">전체 보기 H</button><button id="inspectorToggle" class="btn" title="Explorer / Properties (I)">▤ 탐색기</button><button id="panelBtn" class="btn primary">☰ 설정</button></div></div>
 <aside id="panel"><div class="over">MAP / IMPORT</div><div id="mapName" class="modelTitle">맵을 불러와 봐</div><p class="desc">Roblox Studio의 <b>.rbxm / .rbxmx</b> 파일을 로컬에서 분석해 3D로 표시해. 파일은 서버로 전송되지 않아.</p><div id="drop" role="button" tabindex="0"><b>＋ 맵 파일 선택 또는 끌어놓기</b><span>RBXM · RBXMX · RBXL · RBXLX</span></div><input type="file" id="fileInput" accept=".rbxm,.rbxmx,.rbxl,.rbxlx,.xml"/><div id="status" class="status">파일을 선택하면 자동으로 열어.</div><div id="error" class="status"></div><div class="progress"><div id="progress"></div></div><div class="metrics"><div class="metric"><strong id="parts">0</strong><span>표시된 3D 파트</span></div><div class="metric"><strong id="walls">0</strong><span>투명 충돌벽</span></div><div class="metric"><strong id="meshes">0</strong><span>메시·Union 대체 도형</span></div><div class="metric"><strong id="allParts">0</strong><span>추출한 파트 총수</span></div></div><div class="rule"></div><div class="over">DISPLAY / 레이어</div><label class="checkline"><input id="showInvis" type="checkbox" checked/>투명 충돌벽 표시 <small style="color:#ffd266">(CanCollide)</small></label><label class="lab" for="invisOpacity">충돌벽 표시 불투명도 <span id="opacityLabel">38%</span></label><input id="invisOpacity" type="range" min="1" max="100" value="38" step="1"/><label class="checkline"><input id="showNormal" type="checkbox" checked/>일반 파트 표시</label><label class="checkline"><input id="showTransparent" type="checkbox" checked/>반투명 파트 표시</label><label class="checkline"><input id="showMeshes" type="checkbox" checked/>메시·Union 근사 형상 표시</label><label class="checkline"><input id="showMap" type="checkbox" checked/>미니맵 표시</label>
 <div class="rule"></div><div class="over">SPAWNS / 스폰 마커</div>
 <div class="spawn-controls">
@@ -70,6 +99,16 @@
 <div id="spawnCount" class="spawn-count">맵을 열면 스폰을 자동 탐지해.</div>
 <div class="spawn-legend">동일 좌표가 Neutral과 팀 폴더에 중복 등록되면 마커를 1개만 표시하며, 팀 분류를 우선 표시해. Neutral이 실제 양 팀 공용인지는 서버 로직에 따라 달라질 수 있어.</div>
 </div><div class="rule"></div><div class="over">CAMERA / 프리캠</div><p class="desc">W/S: 시선 방향 그대로 전후 이동(고개를 들면 상승). A/D: 좌우, E/Space: 위, Q/Ctrl: 아래. Shift: 빠르게 · Alt: 정밀 이동. 이동에 부드러운 가감속 적용.</p><label class="lab" for="speed">이동 속도 <span id="speedLabel">48 studs/s</span></label><input type="range" id="speed" min="5" max="280" value="48"/><label class="lab" for="fov">시야각 (수직 FOV) <span id="fovLabel">70°</span></label><input type="range" id="fov" min="35" max="110" value="70"/><label class="lab" for="res">렌더링 해상도 <span id="resLabel">100%</span></label><input type="range" id="res" min="40" max="125" value="100"/><div class="row"><button class="btn" id="centerBtn">맵 중심 이동</button><button class="btn" id="topBtn">위에서 보기</button></div><p class="info"><strong>관통 구간 측정</strong> · 현재 위치에서 P를 눌러 A를 찍고, 이동해서 다시 P를 눌러 B를 찍으면 각 파트의 진입·탈출 위치를 찾아 겹치는 구간을 합쳐. 기본적으로 완전 투명 파트 및 실제 메시 형상을 모르는 근사 충돌체는 관통 계산에서 제외해. 실제 게임의 탄환 판정과 반드시 같지는 않아.<br><br><strong>범례</strong> · 노란색은 <b>원래 투명하지만 CanCollide가 켜진 파트</b>를 강조한 거야. 메시는 에셋 원본 형상이 없으면 박스·쐐기로 근사돼. 실제 게임의 충돌 메시/Union과 정확히 일치하지 않을 수 있어.</p></aside>
+<section id="inspector" class="hidden" aria-label="Explorer와 Properties">
+<div class="inspector-head"><div><div class="inspector-title">▤ EXPLORER & PROPERTIES</div><div class="inspector-sub">파트 탐색 · 좌표 · 회전 · 충돌 · 읽기 전용</div></div><button id="inspectorClose" type="button" aria-label="닫기">✕</button></div>
+<div class="inspect-options"><label><input type="checkbox" id="inspectPick" checked> 3D 클릭 선택</label><span style="color:#94b7c6">좌클릭: 선택 · 드래그: 시점 · 우클릭: 마우스 잠금</span></div>
+<input id="inspectSearch" placeholder="이름 / 클래스 검색 (예: Part, Spawn)" autocomplete="off"/>
+<div id="treeInfo">맵 파일을 열면 계층 구조가 표시돼.</div>
+<div id="sceneTree" role="tree" aria-label="Roblox 객체 계층 구조"></div>
+<div id="propertiesTitle">PROPERTIES · 선택된 객체 없음</div>
+<div id="propertyScroll"><div class="desc">Explorer에서 객체를 선택하거나, 3D 화면의 파트를 클릭해 봐.</div></div>
+<div class="inspect-actions"><button id="focusSelected" disabled>선택 위치로 이동 (F)</button><button id="copySelected" disabled>속성 복사</button></div>
+</section>
 <div id="stats"><b id="loadedLabel">파일 대기 중</b><div class="muted" id="coords">X — / Y — / Z —</div><div class="muted" id="rotation">Yaw — · Pitch —</div><div class="muted" id="countLabel">0 objects</div></div>
 <div id="measureBox">
 <div class="mTitle">📐 관통 경계 분석 <button id="mCollapseBtn" type="button">접기</button></div>
@@ -90,7 +129,7 @@
 <div id="measureLegend"><span><i style="background:#ffd166"></i>고체</span><span><i style="background:#52e7c9"></i>공기</span><span><i style="background:#ff8aac"></i>경계</span></div>
 <div class="mButtons"><button id="measureBtn">현재 위치 찍기 (P)</button><button id="measureClear">초기화 (U)</button></div>
 </div><button id="measureTouch">📍 현재 위치 찍기</button>
-<div id="minimap"><canvas id="map"></canvas></div><div id="hint">마우스: 시점 · <kbd>W/S</kbd> 시선 방향 플라이 · <kbd>A/D</kbd> 좌우 · <kbd>E/Q</kbd> 상승/하강 · <kbd>Shift</kbd> 가속 · <kbd>P</kbd> 관통 점 · <kbd>T</kbd> 스폰 표시</div>
+<div id="minimap"><canvas id="map"></canvas></div><div id="hint">좌클릭: 파트 선택 · 드래그: 시점 · 우클릭: 포인터 잠금 · <kbd>I</kbd> Explorer · <kbd>F</kbd> 선택 이동 · 마우스: 시점 · <kbd>W/S</kbd> 시선 방향 플라이 · <kbd>A/D</kbd> 좌우 · <kbd>E/Q</kbd> 상승/하강 · <kbd>Shift</kbd> 가속 · <kbd>P</kbd> 관통 점 · <kbd>T</kbd> 스폰 표시</div>
 <div id="touch"><div id="stick" class="stick"><div id="nub" class="nub"></div></div><div class="vertical"><button id="upBtn">↑</button><button id="downBtn">↓</button><button id="runBtn">달리기</button></div></div>
 <div id="toast"></div><div id="cover"><div class="welcome"><h2>RBXM 3D 맵 뷰어</h2><p>파일을 넣으면 자동으로 장면을 구성해.<br>별도 서버나 Roblox Studio 없이 실행할 수 있어.</p></div></div>
 <script>
@@ -101,6 +140,7 @@ const clamp=(n,a,b)=>Math.min(b,Math.max(a,n)),fnum=x=>Number.isFinite(x)?x:0;
 const vecAdd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]], vecSub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]], vecScale=(a,k)=>a.map(v=>v*k);
 const norm=v=>vecScale(v,1/Math.max(1e-9,Math.hypot(...v))),dot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2],cross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
 const I3=[1,0,0,0,1,0,0,0,1];const targetClasses=new Set(['Part','WedgePart','CornerWedgePart','MeshPart','TrussPart','UnionOperation','NegateOperation','PartOperation','SpawnLocation','Seat','VehicleSeat']);
+let sceneNodes=new Map(),sceneRoots=[],sceneSelected=null,sceneExpanded=new Set(),sceneShownLimit=new Map(),sceneSearchTimer=null,clickDown=null;
 let parts=[],batches=[],spawnCandidates=[],spawns=[],spawnBatches=[],spawnSizeScale=1,world={x0:-100,x1:100,y0:-20,y1:20,z0:-100,z1:100,center:[0,0,0],radius:180};
 let gl=null,program=null,geo={},loc=null,cam=[0,20,70],yaw=0,pitch=0,loaded=false,lastFrame=0,frames=0,fpsTime=0;
 let overlayOpacity=.38,movementSpeed=48,fov=70,resScale=1,lastMap=0,currentFile='',loadTicket=0;
@@ -145,7 +185,116 @@ function resolveSpawns(){
   $('spawnCount').textContent=`고유 스폰 ${spawns.length}개 · Ghosts ${ct.Ghosts} / Phantoms ${ct.Phantoms} / Neutral ${ct.Neutral} / 기타 ${ct.Other}`;
 }
 function spawnShown(spawn){return $('showSpawns').checked&&({Ghosts:'spawnGhosts',Phantoms:'spawnPhantoms',Neutral:'spawnNeutral',Other:'spawnOther'}[spawn.team]&&$({Ghosts:'spawnGhosts',Phantoms:'spawnPhantoms',Neutral:'spawnNeutral',Other:'spawnOther'}[spawn.team]).checked)}
-function extractXML(text){let count=0,parser=/<Item\b[^>]*>|<\/Item\s*>|<Properties>[\s\S]*?<\/Properties>/gi,match,stack=[];const result=[];spawnCandidates=[];
+
+// =============== EXPLORER & PROPERTIES (로컬 데이터 / 읽기 전용) ===============
+const NODE_PAGE_SIZE=160;
+function sceneReset(){sceneNodes=new Map();sceneRoots=[];sceneSelected=null;sceneExpanded=new Set();sceneShownLimit=new Map();$('inspectSearch').value='';sceneRenderTree();sceneRenderProperties()}
+function sceneAddNode(id,cls,name,parentId,metadata={}){
+  const node={id:String(id),cls:cls||'Instance',name:name||cls||'Instance',parentId:parentId==null?null:String(parentId),children:[],partIndex:null,metadata};
+  sceneNodes.set(node.id,node);return node;
+}
+function sceneFinalizeTree(){sceneRoots=[];for(const node of sceneNodes.values())node.children=[];
+  for(const node of sceneNodes.values()){
+    const parent=node.parentId?sceneNodes.get(node.parentId):null;
+    if(parent&&node.id!==node.parentId)parent.children.push(node.id);
+    else sceneRoots.push(node.id);
+  }
+  // Limit default expansion to root/model. Subtrees of 1000s of parts remain lazy.
+  sceneExpanded=new Set(sceneRoots.slice(0,5));for(const rootId of sceneRoots.slice(0,4)){
+    const r=sceneNodes.get(rootId);if(r&&r.children.length<=7)for(const c of r.children)sceneExpanded.add(c);
+  }
+  sceneRenderTree();sceneRenderProperties();
+}
+function sceneSelectedPart(){const node=sceneNodes.get(sceneSelected);return node?.partIndex!=null?parts[node.partIndex]:null}
+function scenePickPart(x,y){
+  if(!loaded)return null;const rect=canvas.getBoundingClientRect();const nx=(x-rect.left)/rect.width*2-1,ny=1-(y-rect.top)/rect.height*2;
+  const rayForward=front(),rayRight=[Math.cos(yaw),0,Math.sin(yaw)],rayUp=norm(cross(rayRight,rayForward));
+  const ratio=rect.width/Math.max(rect.height,1),v=Math.tan(fov*Math.PI/360),direction=norm(vecAdd(rayForward,vecAdd(vecScale(rayRight,nx*v*ratio),vecScale(rayUp,ny*v))));
+  const maxDist=Math.max(2000,world.radius*10);let best=null,dist=Infinity;
+  for(const p of parts){
+    if(p.category==='opaque'&&!$('showNormal').checked)continue;
+    if(p.category==='transparent'&&!$('showTransparent').checked)continue;
+    if(p.category==='wall'&&!$('showInvis').checked)continue;
+    if(p.mesh&&!$('showMeshes').checked)continue;
+    if(p.nodeId==null)continue;
+    const v0=vecSub(p.p,cam),along=dot(v0,direction),radius=.5*Math.hypot(...p.s);
+    if(along+radius<0||along-radius>dist||Math.max(0,dot(v0,v0)-along*along)>radius*radius)continue;
+    const hit=intervalOBB(p,cam,direction,Math.min(maxDist,dist));
+    if(hit){const d=hit[0]<.025?hit[1]:hit[0];if(d>.025&&d<dist){dist=d;best=p.nodeId}}
+  }
+  return best;
+}
+function sceneSelect(id,{focus=false}={}){
+  const node=sceneNodes.get(String(id));if(!node)return;
+  sceneSelected=node.id;
+  for(let n=node,depth=0;n?.parentId&&depth<120;depth++){sceneExpanded.add(n.parentId);n=sceneNodes.get(n.parentId)}
+  // Ensure part is reachable even if parent folder has thousands of children.
+  if(node.parentId){const parent=sceneNodes.get(node.parentId);if(parent){const index=parent.children.indexOf(node.id);if(index>=0){const prior=sceneShownLimit.get(node.parentId)||NODE_PAGE_SIZE;sceneShownLimit.set(node.parentId,Math.max(prior,index+1))}}}
+  sceneRenderTree();sceneRenderProperties();
+  const active=$('sceneTree').querySelector('.tree-row.selected');active?.scrollIntoView({block:'nearest'});
+  if(focus)sceneFocusSelected();
+}
+function sceneOpen(on){$('inspector').classList.toggle('hidden',!on);document.body.classList.toggle('inspector-open',on);if(on){document.exitPointerLock?.();sceneRenderTree();sceneRenderProperties();}}
+function sceneRenderTree(){const container=$('sceneTree');container.replaceChildren();const q=$('inspectSearch').value.trim().toLocaleLowerCase();
+  $('treeInfo').textContent=sceneNodes.size?`${sceneNodes.size.toLocaleString()}개 객체 · ${parts.length.toLocaleString()}개 3D 파트`:'맵 파일을 열면 계층 구조가 표시돼.';
+  if(!sceneNodes.size)return;
+  const fragment=document.createDocumentFragment();let count=0;
+  function row(node,depth,{searchResult=false}={}){
+    const div=document.createElement('div');div.className='tree-row'+(node.id===sceneSelected?' selected':'');div.style.paddingLeft=(5+Math.min(depth,28)*15)+'px';div.dataset.nodeid=node.id;div.setAttribute('role','treeitem');
+    const hasChildren=node.children.length>0;
+    const arrow=document.createElement('button');arrow.className='tree-arrow';arrow.textContent=hasChildren?(sceneExpanded.has(node.id)?'▾':'▸'):'·';arrow.disabled=!hasChildren||searchResult;arrow.onclick=e=>{e.stopPropagation();if(sceneExpanded.has(node.id))sceneExpanded.delete(node.id);else sceneExpanded.add(node.id);sceneRenderTree()};div.appendChild(arrow);
+    const icon=document.createElement('span');icon.className='tree-icon';icon.textContent=hasChildren?'▣':node.partIndex!=null?'◻':'◇';div.appendChild(icon);
+    const name=document.createElement('span');name.className='tree-name';name.textContent=node.name;name.title=node.name;div.appendChild(name);
+    const cl=document.createElement('span');cl.className='tree-class';cl.textContent=node.cls;div.appendChild(cl);
+    div.addEventListener('click',()=>sceneSelect(node.id));fragment.appendChild(div);count++;
+  }
+  if(q){let matched=0;for(const node of sceneNodes.values()){
+      if(node.name.toLocaleLowerCase().includes(q)||node.cls.toLocaleLowerCase().includes(q)){matched++;if(matched<=120)row(node,0,{searchResult:true})}
+    }
+    $('treeInfo').textContent+=` · 검색 ${matched.toLocaleString()}건 (최대 120개 표시)`;
+    if(!matched){const none=document.createElement('div');none.className='desc';none.textContent='검색 결과가 없어.';fragment.appendChild(none)}
+  }else{
+    const walk=(id,depth)=>{const node=sceneNodes.get(id);if(!node)return;row(node,depth);
+      if(sceneExpanded.has(id)&&node.children.length){let limit=sceneShownLimit.get(id)||NODE_PAGE_SIZE;for(const cid of node.children.slice(0,limit))walk(cid,depth+1);
+        if(node.children.length>limit){const btn=document.createElement('button');btn.className='tree-more';btn.textContent=`＋ 더 보기 (${(node.children.length-limit).toLocaleString()}개 남음)`;btn.style.marginLeft=(15*(depth+1)+14)+'px';btn.onclick=()=>{sceneShownLimit.set(id,limit+NODE_PAGE_SIZE);sceneRenderTree()};fragment.appendChild(btn)}
+      }
+    };
+    for(const id of sceneRoots)walk(id,0);
+  }
+  container.appendChild(fragment);
+}
+function scenePath(id){let seq=[],node=sceneNodes.get(id),seen=new Set();for(let i=0;node&&i<120&&!seen.has(node.id);i++){seq.unshift(node.name);seen.add(node.id);node=sceneNodes.get(node.parentId)}return seq.join(' / ')}
+function eulerYXZ(r){if(!r||r.length!==9)return null;let x=Math.asin(clamp(-r[5],-1,1)),y=Math.atan2(r[2],r[8]),z=Math.atan2(r[3],r[4]);return [x,y,z].map(v=>(v*180/Math.PI).toFixed(2))}
+function scenePropertyPairs(){const node=sceneNodes.get(sceneSelected);if(!node)return null;const p=sceneSelectedPart();const meta=node.metadata||{};
+  const rows=[['Name',node.name],['ClassName',node.cls],['Object ID',node.id],['Path',scenePath(node.id)],['Children',String(node.children.length)]];
+  if(p){const fmt=v=>Number(v).toFixed(4);rows.push(['— Transform —','section'],['Position',p.p.map(fmt).join(', ')],['Size',p.s.map(fmt).join(', ')],['Orientation (YXZ)',(eulerYXZ(p.rot)||[]).join('°, ')+'°'],['CFrame · 3×3',p.rot.map(v=>Number(v).toFixed(4)).join(', ')],['— Appearance —','section'],['Color (RGB)',p.color.join(', ')],['Transparency',fmt(p.transparency)],['Material',meta.Material??String(p.material)+' (enum)'],['Shape',String(p.shape)],['— Physics —','section'],['CanCollide',meta.CanCollide??String(p.collide)+' (default/inferred)'],['Anchored',meta.Anchored??'파일에 명시 안 됨'],['CanTouch',meta.CanTouch??'파일에 명시 안 됨'],['CanQuery',meta.CanQuery??'파일에 명시 안 됨'],['CastShadow',meta.CastShadow??'파일에 명시 안 됨'],['Mesh geometry',p.mesh?'현재 뷰어에서 근사 도형':'원본 기본 형상']);}
+  for(const key of ['MeshId','TextureID','CollisionFidelity','Reflectance','Locked','Massless','Archivable'])if(meta[key]!=null)rows.push([key,meta[key]]);
+  return rows;
+}
+function sceneRenderProperties(){const node=sceneNodes.get(sceneSelected);$('focusSelected').disabled=!sceneSelectedPart();$('copySelected').disabled=!node;
+  $('propertiesTitle').textContent=node?`PROPERTIES · ${node.name}`:'PROPERTIES · 선택된 객체 없음';const el=$('propertyScroll');el.replaceChildren();const rows=scenePropertyPairs();if(!rows){const t=document.createElement('div');t.className='desc';t.textContent='Explorer에서 객체를 고르거나 3D 화면에서 파트를 클릭해 봐.';el.appendChild(t);return}
+  for(const [name,value] of rows){if(value==='section'){const section=document.createElement('div');section.className='prop-section';section.textContent=name.replace(/—/g,'').trim();el.appendChild(section);continue}
+    const row=document.createElement('div');row.className='prop-row';const n=document.createElement('div');n.className='prop-name';n.textContent=name;const v=document.createElement('div');v.className='prop-value';v.textContent=String(value);row.append(n,v);el.appendChild(row)}
+}
+function sceneFocusSelected(){const p=sceneSelectedPart();if(!p){toast('3D 파트를 먼저 선택해 줘');return}const size=clamp(Math.hypot(...p.s)*1.75,8,180);cam=vecAdd(p.p,[size*.58,size*.34,size*.72]);freecamVelocity=[0,0,0];lookAtPoint(p.p);toast('선택한 파트로 카메라 이동')}
+async function sceneCopy(){const rows=scenePropertyPairs();if(!rows)return;const txt=rows.filter(x=>x[1]!=='section').map(([k,v])=>`${k}: ${v}`).join('\n');try{await navigator.clipboard.writeText(txt);toast('속성을 복사했어')}catch{const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();try{document.execCommand('copy');toast('속성을 복사했어')}catch{toast('복사할 수 없었어')}t.remove()}}
+// Highlight selected object's world oriented bounding box; geometry proxies are labeled as such in Properties.
+function sceneDrawHighlight(ctx,w,h){const p=sceneSelectedPart();if(!p)return;const corners=[],m=p.m;
+ for(const [x,y,z] of [[-1,-1,-1],[-1,-1,1],[-1,1,-1],[-1,1,1],[1,-1,-1],[1,-1,1],[1,1,-1],[1,1,1]]){
+  corners.push([m[12]+.5*(m[0]*x+m[4]*y+m[8]*z),m[13]+.5*(m[1]*x+m[5]*y+m[9]*z),m[14]+.5*(m[2]*x+m[6]*y+m[10]*z)]);
+ }
+ const near=.18,fw=front();ctx.save();ctx.lineWidth=2.5;ctx.strokeStyle='#38ffde';ctx.setLineDash([6,3]);ctx.shadowColor='#00ffd1';ctx.shadowBlur=5;
+ for(const [i,j] of [[0,1],[0,2],[0,4],[1,3],[1,5],[2,3],[2,6],[3,7],[4,5],[4,6],[5,7],[6,7]]){
+  let a=corners[i],b=corners[j],da=dot(vecSub(a,cam),fw),db=dot(vecSub(b,cam),fw);if(da<near&&db<near)continue;
+  if(da<near)a=vecAdd(a,vecScale(vecSub(b,a),(near-da)/(db-da)));else if(db<near)b=vecAdd(b,vecScale(vecSub(a,b),(near-db)/(da-db)));
+  const aa=worldPointToScreen(a,w,h),bb=worldPointToScreen(b,w,h);if(![aa.x,aa.y,bb.x,bb.y].every(Number.isFinite))continue;
+  ctx.beginPath();ctx.moveTo(aa.x,aa.y);ctx.lineTo(bb.x,bb.y);ctx.stroke();
+ }
+ ctx.restore();const label=worldPointToScreen(p.p,w,h);if(label.depth>near&&label.x>=0&&label.x<=w&&label.y>=0&&label.y<=h){ctx.font='bold 12px sans-serif';const text=p.name+' · '+p.cls;const tw=ctx.measureText(text).width;const lx=clamp(label.x+12,8,w-tw-19),ly=clamp(label.y-26,36,h-22);ctx.fillStyle='#0c3440e8';ctx.fillRect(lx,ly,tw+12,22);ctx.fillStyle='#9effed';ctx.fillText(text,lx+6,ly+15)}
+}
+// ===========================================================================
+
+function extractXML(text){let count=0,parser=/<Item\b[^>]*>|<\/Item\s*>|<Properties>[\s\S]*?<\/Properties>/gi,match,stack=[];const result=[];spawnCandidates=[];sceneNodes=new Map();sceneRoots=[];
  const reCache=new Map();const segment=(s,tag,name)=>{let key=tag+'_'+name,re=reCache.get(key);if(!re){re=new RegExp('<'+tag+'\\s+name="'+name+'"[^>]*>([\\s\\S]*?)<\\/'+tag+'>','i');reCache.set(key,re)}const m=re.exec(s);return m?m[1]:null};
  const scalar=(s,tag,name)=>{let v=segment(s,tag,name);return v==null?null:v};
  const components=(v,names)=>names.map(t=>{const m=new RegExp('<'+t+'>([^<]*)<\\/'+t+'>','i').exec(v);return m?Number(m[1]):0});
@@ -154,8 +303,8 @@ function extractXML(text){let count=0,parser=/<Item\b[^>]*>|<\/Item\s*>|<Propert
  let c=scalar(s,'Color3uint8','Color3uint8'),col=c!=null?(/<R>/i.test(c)?components(c,['R','G','B']):localColor(c)):null;
  if(!col){let b=segment(s,'Color3','Color');if(b){col=components(b,['R','G','B']).map(v=>Math.round(clamp(v,0,1)*255))}}
  if(!col)col=[159,169,178];let tr=scalar(s,'float','Transparency')||scalar(s,'double','Transparency');let collide=scalar(s,'bool','CanCollide');let shape=scalar(s,'token','shape');
- let part={p:xyz,s:size,rot,color:col,transparency:tr==null?0:Number(tr),collide:collide==null?true:collide.trim().toLowerCase()==='true',shape:shape==null?1:Number(shape),cls:p.cls,name:decode(n),mesh:['MeshPart','UnionOperation','NegateOperation','PartOperation'].includes(p.cls),material:Number(scalar(s,'token','Material')||0)};let it=normalizePart(part);if(it){result.push(it);rememberSpawn(it,stack.map(x=>x.name||""))}}
- while((match=parser.exec(text))!==null){let tok=match[0];if(/^<Item\b/i.test(tok)){let cm=/\bclass="([^"]+)"/i.exec(tok);stack.push({cls:cm?cm[1]:'',props:null,name:""});}else if(/^<Properties>/i.test(tok)){if(stack.length){const node=stack[stack.length-1];node.props=tok;node.name=decode(scalar(tok,"string","Name")||node.cls)}}else{let node=stack.pop();if(node){item(node);count++}}}
+ let part={p:xyz,s:size,rot,color:col,transparency:tr==null?0:Number(tr),collide:collide==null?true:collide.trim().toLowerCase()==='true',shape:shape==null?1:Number(shape),cls:p.cls,name:decode(n),mesh:['MeshPart','UnionOperation','NegateOperation','PartOperation'].includes(p.cls),material:Number(scalar(s,'token','Material')||0)};let it=normalizePart(part);if(it){it.nodeId=p.nodeId;const sn=sceneNodes.get(p.nodeId);if(sn)sn.partIndex=result.length;result.push(it);rememberSpawn(it,stack.map(x=>x.name||""))}}
+ while((match=parser.exec(text))!==null){let tok=match[0];if(/^<Item\b/i.test(tok)){let cm=/\bclass="([^"]+)"/i.exec(tok);const nodeId=String(++count),parentId=stack.length?stack[stack.length-1].nodeId:null;sceneAddNode(nodeId,cm?cm[1]:'Instance',cm?cm[1]:'Instance',parentId);stack.push({cls:cm?cm[1]:'',props:null,name:'',nodeId});}else if(/^<Properties>/i.test(tok)){if(stack.length){const node=stack[stack.length-1];node.props=tok;node.name=decode(scalar(tok,'string','Name')||node.cls);const itemNode=sceneNodes.get(node.nodeId);if(itemNode){itemNode.name=node.name;for(const key of ['Anchored','CanCollide','CanTouch','CanQuery','CastShadow','Locked','Massless','Archivable']){const v=scalar(tok,'bool',key);if(v!=null)itemNode.metadata[key]=v.trim()}for(const key of ['MeshId','TextureID','CollisionFidelity','Reflectance','Material']){let v=scalar(tok,'string',key)||scalar(tok,'token',key)||scalar(tok,'float',key)||scalar(tok,'double',key);if(v==null){let m=segment(tok,'Content',key);if(m!=null)v=m.replace(/<[^>]+>/g,'').trim()}if(v!=null)itemNode.metadata[key]=decode(String(v).trim())}}}}else{let node=stack.pop();if(node){item(node)}}}
  if(!result.length)throw new Error('XML에서 3D 파트를 찾지 못했어. Roblox 모델인지 확인해 줘.');return result}
 // Binary Roblox format v0 decoder: import only the geometry-related PROP chunks. Script source is NEVER executed.
 class Reader{constructor(u){this.u=u;this.v=new DataView(u.buffer,u.byteOffset,u.byteLength);this.o=0}check(n){if(this.o+n>this.u.length)throw new Error('RBXM 데이터가 잘렸어 ('+this.o+'/'+this.u.length+')')}u8(){this.check(1);return this.u[this.o++]}u16(){this.check(2);let x=this.v.getUint16(this.o,true);this.o+=2;return x}u32(){this.check(4);let x=this.v.getUint32(this.o,true);this.o+=4;return x}f32(){this.check(4);let x=this.v.getFloat32(this.o,true);this.o+=4;return x}bytes(n){this.check(n);let x=this.u.subarray(this.o,this.o+n);this.o+=n;return x}str(){let n=this.u32();if(n>100000000)throw Error('비정상 길이의 문자열');return new TextDecoder().decode(this.bytes(n))}}
@@ -173,18 +322,22 @@ async function extractBinary(buffer){let bytes=new Uint8Array(buffer),r=new Read
  while(r.o<r.u.length){let type=new TextDecoder().decode(r.bytes(4)).replace(/\0/g,''),compressed=r.u32(),rawSize=r.u32();r.u32();if(rawSize>512*1024*1024)throw Error('압축 해제 후 데이터 크기가 너무 커');let raw=r.bytes(compressed||rawSize),data;
  if(compressed){if(raw[0]===0x28&&raw[1]===0xb5&&raw[2]===0x2f&&raw[3]===0xfd){try{const s=new DecompressionStream('zstd');data=new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(s)).arrayBuffer())}catch{throw Error('Zstandard 압축 RBXM은 이 브라우저에서 지원되지 않아. Studio에서 XML(.rbxmx)로 저장해 줘.')}}else{data=lz4Decode(raw,rawSize)}}else data=raw;
  const d=new Reader(data);
- if(type==='INST'){let id=d.u32(),name=d.str(),service=d.u8(),n=d.u32(),refs=references(d,n);if(service)d.bytes(n);const keep=targetClasses.has(name)||name==='Model'||name==='Folder'||name==='Configuration';types.set(id,{name,ids:refs,props:keep?new Map():null});}
+ if(type==='INST'){let id=d.u32(),name=d.str(),service=d.u8(),n=d.u32(),refs=references(d,n);if(service)d.bytes(n);types.set(id,{name,ids:refs,props:new Map()});}
  else if(type==='PRNT'){const version=d.u8(),count=d.u32();if(version===0&&count<=instances){const ids=references(d,count),parents=references(d,count);for(let i=0;i<count;i++)parentMap.set(ids[i],parents[i])}}
- else if(type==='PROP'){let classId=d.u32(),name=d.str(),dtype=d.u8(),cl=types.get(classId);if(cl&&cl.props&&['CFrame','size','Size','Color3uint8','Color','Transparency','CanCollide','Name','shape','Material'].includes(name)){let vals=binaryProperty(d,dtype,cl.ids.length);if(vals)cl.props.set(name,vals);propCount++}}
+ else if(type==='PROP'){let classId=d.u32(),name=d.str(),dtype=d.u8(),cl=types.get(classId);if(cl&&cl.props&&['CFrame','size','Size','Color3uint8','Color','Transparency','CanCollide','Name','shape','Material','Anchored','CanTouch','CanQuery','CastShadow','Reflectance','Locked','Massless','Archivable','MeshId','TextureID','CollisionFidelity'].includes(name)){let vals=binaryProperty(d,dtype,cl.ids.length);if(vals)cl.props.set(name,vals);propCount++}}
  if(type==='END')break;processed++;if(processed%80===0){status('RBXM 해독 중… '+processed+'개 블록 / '+instances.toLocaleString()+'개 객체',Math.min(78,Math.floor(r.o/r.u.length*80)));await new Promise(r=>setTimeout(r,0))}
  }
- const byId=new Map();for(const cl of types.values())for(let i=0;i<cl.ids.length;i++){
-  byId.set(cl.ids[i],{cls:cl.name,name:cl.props?.get('Name')?.[i]||cl.name});
+ sceneNodes=new Map();sceneRoots=[];const byId=new Map();for(const cl of types.values())for(let i=0;i<cl.ids.length;i++){
+  const id=cl.ids[i];const name=cl.props?.get('Name')?.[i]||cl.name;
+  const metadata={};for(const key of ['Anchored','CanCollide','CanTouch','CanQuery','CastShadow','Reflectance','Locked','Massless','Archivable','MeshId','TextureID','CollisionFidelity','Material']){
+    const value=cl.props?.get(key)?.[i];if(value!==undefined&&value!==null)metadata[key]=String(value)
+  }
+  byId.set(id,{cls:cl.name,name});sceneAddNode(id,cl.name,name,parentMap.get(id),metadata);
  }
  function ancestors(ref){let seq=[],seen=new Set();for(let id=parentMap.get(ref),iter=0;id!=null&&id>=0&&iter<64&& !seen.has(id);id=parentMap.get(id),iter++){
    seen.add(id);const p=byId.get(id);if(p)seq.push(p.name);
  }return seq.reverse()}
- let result=[];for(const cl of types.values()){if(!cl.props)continue;let cp=cl.props,pf=cp.get('CFrame'),size=cp.get('size')||cp.get('Size');if(!pf||!size)continue;for(let i=0;i<cl.ids.length;i++){const c=pf[i],s=size[i];if(!c||!s)continue;let cs=cp.get('Color3uint8')?.[i],cr=cp.get('Color')?.[i];const color=cs||cr?.map(x=>Math.round(clamp(x,0,1)*255))||[160,170,182];let p={p:c.p,rot:c.rot,s,color,transparency:cp.get('Transparency')?.[i]??0,collide:cp.get('CanCollide')?.[i]??true,shape:cp.get('shape')?.[i]??1,material:cp.get('Material')?.[i]??0,cls:cl.name,name:cp.get('Name')?.[i]||cl.name,mesh:['MeshPart','UnionOperation','NegateOperation','PartOperation'].includes(cl.name)};let parsed=normalizePart(p);if(parsed){result.push(parsed);rememberSpawn(parsed,ancestors(cl.ids[i]))}}}if(!result.length)throw Error('바이너리에서 렌더링 가능한 3D 파트를 찾지 못했어.');return result}
+ let result=[];for(const cl of types.values()){if(!cl.props)continue;let cp=cl.props,pf=cp.get('CFrame'),size=cp.get('size')||cp.get('Size');if(!pf||!size)continue;for(let i=0;i<cl.ids.length;i++){const c=pf[i],s=size[i];if(!c||!s)continue;let cs=cp.get('Color3uint8')?.[i],cr=cp.get('Color')?.[i];const color=cs||cr?.map(x=>Math.round(clamp(x,0,1)*255))||[160,170,182];let p={p:c.p,rot:c.rot,s,color,transparency:cp.get('Transparency')?.[i]??0,collide:cp.get('CanCollide')?.[i]??true,shape:cp.get('shape')?.[i]??1,material:cp.get('Material')?.[i]??0,cls:cl.name,name:cp.get('Name')?.[i]||cl.name,mesh:['MeshPart','UnionOperation','NegateOperation','PartOperation'].includes(cl.name)};let parsed=normalizePart(p);if(parsed){parsed.nodeId=String(cl.ids[i]);const sn=sceneNodes.get(parsed.nodeId);if(sn)sn.partIndex=result.length;result.push(parsed);rememberSpawn(parsed,ancestors(cl.ids[i]))}}}if(!result.length)throw Error('바이너리에서 렌더링 가능한 3D 파트를 찾지 못했어.');return result}
 function computeWorld(){let x0=Infinity,x1=-Infinity,y0=Infinity,y1=-Infinity,z0=Infinity,z1=-Infinity;for(const p of parts){const [x,y,z]=p.p,[a,b,c]=p.s;if(!Number.isFinite(x+y+z))continue; // generous axis aligned extents
  const rad=.5*Math.hypot(a,b,c);x0=Math.min(x0,x-rad);x1=Math.max(x1,x+rad);y0=Math.min(y0,y-rad);y1=Math.max(y1,y+rad);z0=Math.min(z0,z-rad);z1=Math.max(z1,z+rad)}
  let xs=parts.map(p=>p.p[0]).sort((a,b)=>a-b),ys=parts.map(p=>p.p[1]).sort((a,b)=>a-b),zs=parts.map(p=>p.p[2]).sort((a,b)=>a-b),m=Math.floor(parts.length/2);let center=[xs[m],ys[m],zs[m]];
@@ -280,7 +433,8 @@ function drawMinimap(){let cv=mapCanvas,c=mapCtx;if(cv.width!==320){cv.width=320
    let pts=measurePoints.map(pt=>conv(pt[0],pt[2]));
    if(pts.length>1){c.strokeStyle='#52e7c9';c.lineWidth=2.5;c.beginPath();c.moveTo(...pts[0]);c.lineTo(...pts[1]);c.stroke()}
    pts.forEach((pt,i)=>{c.beginPath();c.arc(...pt,4,0,Math.PI*2);c.fillStyle=i?'#ff86b2':'#52e7c9';c.fill();c.strokeStyle='#05131c';c.lineWidth=1;c.stroke()});
- }mini.x=cx;mini.z=cz;mini.scale=scale}
+ }const selected=sceneSelectedPart();if(selected){const [sx,sz]=conv(selected.p[0],selected.p[2]);c.strokeStyle='#46ffda';c.lineWidth=2;c.beginPath();c.arc(sx,sz,7,0,Math.PI*2);c.stroke()}
+  mini.x=cx;mini.z=cz;mini.scale=scale}
 // ========== 측정 기하: 박스/쐐기/구체/원기둥의 실제 수학적 교차 ==========
 // MeshPart/Union/Corners/Truss는 정확한 CollisionFidelity 메시가 없으면 근사 박스다.
 function approximateCollider(p){
@@ -482,6 +636,7 @@ function drawMeasure(){
   if(measureCanvas.width!==cw||measureCanvas.height!==ch){measureCanvas.width=cw;measureCanvas.height=ch}
   const ctx=measureCtx;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
   if(loaded&&$('showSpawns').checked&&$('spawnLabels').checked)drawSpawnLabels(ctx,w,h);
+  if(loaded)sceneDrawHighlight(ctx,w,h);
   if(!loaded||!measurePoints.length)return;
   const A=measurePoints[0],B=measurePoints[1],rt=front(),near=.17;
   function lineWorld(a,b,color){
@@ -533,12 +688,42 @@ function drawMeasure(){
 // ===========================================================================
 
 function hudUpdate(){let total=parts.length,wall=parts.filter(p=>p.wall).length,meshes=parts.filter(p=>p.mesh).length,drawn=parts.filter(p=>p.category!=='wall').length;$('parts').textContent=drawn.toLocaleString();$('walls').textContent=wall.toLocaleString();$('meshes').textContent=meshes.toLocaleString();$('allParts').textContent=total.toLocaleString();$('countLabel').textContent=total.toLocaleString()+' parts'}
-async function loadFile(file){if(!file)return;let ticket=++loadTicket;loaded=false;freecamVelocity=[0,0,0];clearMeasure();$('error').textContent='';$('cover').classList.add('hidden');status('파일 읽는 중…',4);$('drop').querySelector('b').textContent='파일 변경하기';try{const buf=await file.arrayBuffer();if(ticket!==loadTicket)return;let start=new TextDecoder().decode(new Uint8Array(buf,0,Math.min(buf.byteLength,50)));let parsed;if(start.startsWith('<roblox!')){status('RBXM 바이너리 분석 중…',12);parsed=await extractBinary(buf)}else{status('XML 파트 분석 중… (파일 크기에 따라 잠시 걸릴 수 있어)',20);await new Promise(r=>setTimeout(r,15));parsed=extractXML(new TextDecoder().decode(buf))}if(ticket!==loadTicket)return;parts=parsed;resolveSpawns();computeWorld();status('3D 버퍼 업로드 중…',86);await new Promise(r=>setTimeout(r,20));if(!gl)throw Error('이 브라우저에서는 WebGL2가 비활성화되어 3D 화면을 표시할 수 없어.');groupInit();spawnGroupInit();setCamWide();loaded=true;measureUpdate();currentFile=file.name;$('mapName').textContent=file.name;$('loadedLabel').textContent=file.name;hudUpdate();status('불러오기 완료 · 프리캠 탐험 가능',100);$('panel').classList.add('hidden');toast('3D 맵 로드 완료 · '+parts.length.toLocaleString()+'개 파트 / 스폰 '+spawns.length+'개');}catch(e){loaded=false;error(String(e?.message||e))}}
+async function loadFile(file){if(!file)return;let ticket=++loadTicket;loaded=false;sceneReset();freecamVelocity=[0,0,0];clearMeasure();$('error').textContent='';$('cover').classList.add('hidden');status('파일 읽는 중…',4);$('drop').querySelector('b').textContent='파일 변경하기';try{const buf=await file.arrayBuffer();if(ticket!==loadTicket)return;let start=new TextDecoder().decode(new Uint8Array(buf,0,Math.min(buf.byteLength,50)));let parsed;if(start.startsWith('<roblox!')){status('RBXM 바이너리 분석 중…',12);parsed=await extractBinary(buf)}else{status('XML 파트 분석 중… (파일 크기에 따라 잠시 걸릴 수 있어)',20);await new Promise(r=>setTimeout(r,15));parsed=extractXML(new TextDecoder().decode(buf))}if(ticket!==loadTicket)return;parts=parsed;sceneFinalizeTree();resolveSpawns();computeWorld();status('3D 버퍼 업로드 중…',86);await new Promise(r=>setTimeout(r,20));if(!gl)throw Error('이 브라우저에서는 WebGL2가 비활성화되어 3D 화면을 표시할 수 없어.');groupInit();spawnGroupInit();setCamWide();loaded=true;measureUpdate();currentFile=file.name;$('mapName').textContent=file.name;$('loadedLabel').textContent=file.name;hudUpdate();status('불러오기 완료 · 프리캠 탐험 가능',100);$('panel').classList.add('hidden');toast('3D 맵 로드 완료 · '+parts.length.toLocaleString()+'개 파트 / 스폰 '+spawns.length+'개');}catch(e){loaded=false;error(String(e?.message||e))}}
 function setupUI(){$('measureBtn').onclick=markMeasure;$('measureTouch').onclick=markMeasure;$('measureClear').onclick=clearMeasure;$('measureIncludeInvisible').onchange=measureRecompute;$('measureIncludeApprox').onchange=measureRecompute;$('mCollapseBtn').onclick=()=>{const collapsed=$('measureBox').classList.toggle('is-collapsed');$('mCollapseBtn').textContent=collapsed?'펼치기':'접기'};if(mobile){$('measureBox').classList.add('is-collapsed');$('mCollapseBtn').textContent='펼치기'}measureUpdate();$('drop').onclick=()=>$('fileInput').click();$('drop').onkeydown=e=>{if(e.key==='Enter'||e.key===' ')$('fileInput').click()};$('fileInput').onchange=e=>loadFile(e.target.files[0]);for(let ev of ['dragover','dragenter'])document.addEventListener(ev,e=>{e.preventDefault();$('drop').classList.add('drag')});document.addEventListener('dragleave',()=>{$('drop').classList.remove('drag')});document.addEventListener('drop',e=>{e.preventDefault();$('drop').classList.remove('drag');const file=[...e.dataTransfer.files].find(f=>/\.(rbxm|rbxmx|rbxl|rbxlx|xml)$/i.test(f.name));if(file)loadFile(file)});
  $('spawnSize').oninput=e=>{spawnSizeScale=Number(e.target.value)/100;$('spawnSizeLabel').textContent=e.target.value+'%';if(loaded)spawnGroupInit()};
+ $('inspectorToggle').onclick=()=>sceneOpen($('inspector').classList.contains('hidden'));
+ $('inspectorClose').onclick=()=>sceneOpen(false);$('focusSelected').onclick=sceneFocusSelected;$('copySelected').onclick=sceneCopy;
+ $('inspectSearch').oninput=()=>{clearTimeout(sceneSearchTimer);sceneSearchTimer=setTimeout(sceneRenderTree,90)};
  $('panelBtn').onclick=()=>$('panel').classList.toggle('hidden');$('resetBtn').onclick=()=>{if(loaded)setCamWide()};$('centerBtn').onclick=()=>{if(loaded)setCamCenter()};$('topBtn').onclick=()=>{if(loaded)setCamTop()};$('invisOpacity').oninput=e=>{overlayOpacity=Number(e.target.value)/100;$('opacityLabel').textContent=e.target.value+'%'};$('speed').oninput=e=>{movementSpeed=Number(e.target.value);$('speedLabel').textContent=movementSpeed+' studs/s'};$('fov').oninput=e=>{fov=Number(e.target.value);$('fovLabel').textContent=fov+'°'};$('res').oninput=e=>{resScale=Number(e.target.value)/100;$('resLabel').textContent=e.target.value+'%'};$('showMap').onchange=e=>$('minimap').style.display=e.target.checked?'block':'none';
- document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;if(['Space','ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(e.code))e.preventDefault();keys.add(e.code);if(!e.repeat&&e.code==='KeyP')markMeasure();if(!e.repeat&&e.code==='KeyU')clearMeasure();if(!e.repeat&&e.code==='KeyH'&&loaded)setCamWide();if(!e.repeat&&e.code==='KeyM')$('panel').classList.toggle('hidden');if(!e.repeat&&e.code==='KeyT'){const c=$('showSpawns');c.checked=!c.checked;toast('스폰 표시 '+(c.checked?'켜짐':'꺼짐'))}});document.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>{keys.clear();freecamVelocity=[0,0,0]});
- let pointers=new Map();canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);if(e.pointerType==='mouse'&&e.button===0){try{canvas.requestPointerLock?.()}catch{}}});canvas.addEventListener('pointermove',e=>{if(!loaded)return;let dx=0,dy=0;if(document.pointerLockElement===canvas){dx=e.movementX;dy=e.movementY}else if(pointers.has(e.pointerId)){let p=pointers.get(e.pointerId);dx=e.clientX-p[0];dy=e.clientY-p[1];pointers.set(e.pointerId,[e.clientX,e.clientY])}else return;yaw+=dx*(mobile?.005:.003);pitch=clamp(pitch-dy*(mobile?.005:.003),-Math.PI*.49,Math.PI*.49)});for(let ev of ['pointerup','pointercancel'])canvas.addEventListener(ev,e=>pointers.delete(e.pointerId));canvas.addEventListener('contextmenu',e=>e.preventDefault());canvas.addEventListener('wheel',e=>{e.preventDefault();if(loaded){cam=vecAdd(cam,vecScale(front(),-e.deltaY*.025))}},{passive:false});
+ document.addEventListener('keydown',e=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName))return;if(['Space','ArrowDown','ArrowUp','ArrowRight','ArrowLeft'].includes(e.code))e.preventDefault();keys.add(e.code);if(!e.repeat&&e.code==='KeyP')markMeasure();if(!e.repeat&&e.code==='KeyU')clearMeasure();if(!e.repeat&&e.code==='KeyH'&&loaded)setCamWide();if(!e.repeat&&e.code==='KeyM')$('panel').classList.toggle('hidden');if(!e.repeat&&e.code==='KeyI')sceneOpen($('inspector').classList.contains('hidden'));if(!e.repeat&&e.code==='KeyF'&&sceneSelectedPart())sceneFocusSelected();if(!e.repeat&&e.code==='KeyT'){const c=$('showSpawns');c.checked=!c.checked;toast('스폰 표시 '+(c.checked?'켜짐':'꺼짐'))}});document.addEventListener('keyup',e=>keys.delete(e.code));window.addEventListener('blur',()=>{keys.clear();freecamVelocity=[0,0,0]});
+ let pointers=new Map();
+ canvas.addEventListener('pointerdown',e=>{
+  if(e.pointerType==='mouse'&&e.button===2){e.preventDefault();try{canvas.requestPointerLock?.()}catch{}return}
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);
+  clickDown={id:e.pointerId,x:e.clientX,y:e.clientY,moved:0};
+  if(e.pointerType==='mouse'&&!$('inspectPick').checked){try{canvas.requestPointerLock?.()}catch{}}
+ });
+ canvas.addEventListener('pointermove',e=>{
+  if(!loaded)return;let dx=0,dy=0;
+  if(document.pointerLockElement===canvas){dx=e.movementX;dy=e.movementY}
+  else if(pointers.has(e.pointerId)){const prev=pointers.get(e.pointerId);dx=e.clientX-prev[0];dy=e.clientY-prev[1];pointers.set(e.pointerId,[e.clientX,e.clientY]);}
+  else return;
+  if(clickDown&&clickDown.id===e.pointerId)clickDown.moved+=Math.hypot(dx,dy);
+  yaw+=dx*(mobile?.005:.003);pitch=clamp(pitch-dy*(mobile?.005:.003),-Math.PI*.49,Math.PI*.49)
+ });
+ canvas.addEventListener('pointerup',e=>{
+  if(clickDown&&e.pointerId===clickDown.id){
+    if(loaded&&$('inspectPick').checked&&clickDown.moved<6&&document.pointerLockElement!==canvas){
+      const id=scenePickPart(e.clientX,e.clientY);if(id){sceneSelect(id);sceneOpen(true)}else toast('이 위치에는 선택할 파트가 없어');
+    }
+    clickDown=null;
+  }
+  pointers.delete(e.pointerId);
+ });
+ canvas.addEventListener('pointercancel',e=>{pointers.delete(e.pointerId);clickDown=null});
+ canvas.addEventListener('contextmenu',e=>e.preventDefault());
+ canvas.addEventListener('wheel',e=>{e.preventDefault();if(loaded){cam=vecAdd(cam,vecScale(front(),-e.deltaY*.025))}},{passive:false});
  mapCanvas.addEventListener('pointerdown',e=>{if(!loaded)return;let r=mapCanvas.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*320,z=(e.clientY-r.top)/r.height*320;cam=[mini.x+(x-160)/mini.scale,cam[1],mini.z+(z-160)/mini.scale];freecamVelocity=[0,0,0];toast('해당 지도 위치로 이동했어')});
  if(!mobile)$('touch').style.display='none';const st=$('stick');let active=null;function stickSet(e){let r=st.getBoundingClientRect(),x=e.clientX-(r.left+r.width/2),y=e.clientY-(r.top+r.height/2),d=Math.hypot(x,y)||1,scale=Math.min(1,(r.width*.32)/d);x*=scale;y*=scale;$('nub').style.left=(50+x/r.width*100)+'%';$('nub').style.top=(50+y/r.height*100)+'%';touchMove.x=x/(r.width*.32);touchMove.y=y/(r.width*.32)}st.addEventListener('pointerdown',e=>{active=e.pointerId;st.setPointerCapture(active);stickSet(e);e.preventDefault()});st.addEventListener('pointermove',e=>{if(e.pointerId===active)stickSet(e)});function stickClear(){active=null;touchMove.x=touchMove.y=0;$('nub').style.left='50%';$('nub').style.top='50%'}st.addEventListener('pointerup',stickClear);st.addEventListener('pointercancel',stickClear);
  for(let[id,key]of[['upBtn','Space'],['downBtn','ControlLeft'],['runBtn','ShiftLeft']]){let el=$(id);el.addEventListener('pointerdown',e=>{keys.add(key);el.setPointerCapture(e.pointerId);e.preventDefault()});for(let ev of ['pointerup','pointercancel'])el.addEventListener(ev,()=>keys.delete(key))}}
